@@ -8,10 +8,12 @@ namespace ControlCenter {
 	public class Host : Node {
 
 		protected String hostName;
+		protected Router neighborRouter;
 
-		public Host(int id, String ip, int asID, int port) : base(id, ip, asID) {
+		public Host(int id, String ip, int asID, int port, Router neighborRouter) : base(id, ip, asID) {
 			availablePorts.AddLast(port);
 			hostName = "Host" + this.id;
+			this.neighborRouter = neighborRouter;
 		}
 
 		public String GetHostName() {
