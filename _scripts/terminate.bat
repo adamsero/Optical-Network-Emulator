@@ -1,0 +1,1 @@
+Powershell.exe -executionpolicy remotesigned -File  .\_ps.ps1

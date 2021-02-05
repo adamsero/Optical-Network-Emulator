@@ -1,0 +1,5 @@
+<host name="host1">
+	<host-topological-ip>192.168.1.2</host-topological-ip>
+	<assigned-router-topological-ip>192.168.1.1</assigned-router-topological-ip>
+	<port>60000</port>
+</host>

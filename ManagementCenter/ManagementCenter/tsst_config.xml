@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<config>
+	<hosts>
+
+		<host id="1">
+			<host-ip>160.0.0.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="2">
+			<host-ip>160.0.1.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="3">
+			<host-ip>160.0.1.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="4">
+			<host-ip>160.0.2.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="5">
+			<host-ip>160.0.2.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="6">
+			<host-ip>160.0.4.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+		<host id="7">
+			<host-ip>160.0.4.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+	</hosts>
+
+	<routers>
+
+		<router id="1">
+			<router-ip>160.0.1.1</router-ip>
+
+			<router-ports>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+				<router-port>54000</router-port>
+				<router-port>55000</router-port>
+			</router-ports>
+
+			<assigned-hosts>
+				<assigned-host id="2"></assigned-host>
+				<assigned-host id="3"></assigned-host>
+			</assigned-hosts>
+		</router>
+
+		<router id="2">
+			<router-ip>160.0.2.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+			</router-ports>
+
+			<assigned-hosts>
+				<assigned-host id="4"></assigned-host>
+				<assigned-host id="5"></assigned-host>
+			</assigned-hosts>
+		</router>
+
+		<router id="3">
+			<router-ip>160.0.3.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+			</router-ports>
+
+			<assigned-hosts>
+			</assigned-hosts>
+		</router>
+
+		<router id="4">
+			<router-ip>160.0.4.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+			</router-ports>
+
+			<assigned-hosts>
+				<assigned-host id="6"></assigned-host>
+				<assigned-host id="7"></assigned-host>
+			</assigned-hosts>
+		</router>
+
+		<router id="5">
+			<router-ip>160.0.0.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+			</router-ports>
+
+			<assigned-hosts>
+				<assigned-host id="1"></assigned-host>
+			</assigned-hosts>
+		</router>
+
+	</routers>
+
+	<cloud id="1">
+		<connections>
+
+			<connection id="1" type="host-router">
+				<endpoint type="host" id="1"></endpoint>
+				<endpoint type="router" id="5" port="50000" ></endpoint>
+			</connection>
+
+			<connection id="2" type="router-router">
+				<endpoint type="router" id="5" port="52000"></endpoint>
+				<endpoint type="router" id="1" port="51000"></endpoint>
+			</connection>
+
+			<connection id="3" type="router-router">
+				<endpoint type="router" id="5" port="51000"></endpoint>
+				<endpoint type="router" id="3" port="50000"></endpoint>
+			</connection>
+
+			<connection id="4" type="router-router">
+				<endpoint type="router" id="1" port="52000"></endpoint>
+				<endpoint type="router" id="3" port="52000"></endpoint>
+			</connection>
+
+			<connection id="5" type="host-router">
+				<endpoint type="host" id="2"></endpoint>
+				<endpoint type="router" id="1" port="55000"></endpoint>
+			</connection>
+
+			<connection id="6" type="host-router">
+				<endpoint type="host" id="3"></endpoint>
+				<endpoint type="router" id="1" port="54000"></endpoint>
+			</connection>
+
+			<connection id="7" type="router-router">
+				<endpoint type="router" id="1" port="53000"></endpoint>
+				<endpoint type="router" id="2" port="53000"></endpoint>
+			</connection>
+
+			<connection id="8" type="host-router">
+				<endpoint type="host" id="4"></endpoint>
+				<endpoint type="router" id="2" port="52000"></endpoint>
+			</connection>
+
+			<connection id="9" type="host-router">
+				<endpoint type="host" id="5"></endpoint>
+				<endpoint type="router" id="2" port="51000"></endpoint>
+			</connection>
+
+			<connection id="10" type="router-router">
+				<endpoint type="router" id="2" port="50000"></endpoint>
+				<endpoint type="router" id="4" port="52000"></endpoint>
+			</connection>
+
+			<connection id="11" type="router-router">
+				<endpoint type="router" id="3" port="51000"></endpoint>
+				<endpoint type="router" id="4" port="53000"></endpoint>
+			</connection>
+
+			<connection id="12" type="host-router">
+				<endpoint type="host" id="6"></endpoint>
+				<endpoint type="router" id="4" port="51000"></endpoint>
+			</connection>
+
+			<connection id="13" type="host-router">
+				<endpoint type="host" id="7"></endpoint>
+				<endpoint type="router" id="4" port="50000"></endpoint>
+			</connection>
+
+		</connections>
+	</cloud>
+
+	<management-center id="1">
+	</management-center>
+</config>

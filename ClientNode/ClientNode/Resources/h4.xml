@@ -1,0 +1,5 @@
+<host name="host4">
+	<host-topological-ip></host-topological-ip>
+	<assigned-router-topological-ip></assigned-router-topological-ip>
+	<port>60004</port>
+</host>

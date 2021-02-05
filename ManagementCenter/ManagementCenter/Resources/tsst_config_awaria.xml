@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<config>
+	<hosts>
+	
+		<host id="1">
+			<host-ip>160.0.0.2</host-ip>
+			<host-port>50000</host-port>
+			
+		</host>
+	
+		<host id="2">
+			<host-ip>160.0.1.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+	
+		<host id="3">
+			<host-ip>160.0.1.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+	
+		<host id="4">
+			<host-ip>160.0.2.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+	
+		<host id="5">
+			<host-ip>160.0.2.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+	
+		<host id="6">
+			<host-ip>160.0.4.3</host-ip>
+			<host-port>50000</host-port>
+		</host>
+	
+		<host id="7">
+			<host-ip>160.0.4.2</host-ip>
+			<host-port>50000</host-port>
+		</host>
+
+	</hosts>
+
+	<routers>
+	
+		<router id="1">
+			<router-ip>160.0.1.1</router-ip>
+
+			<router-ports>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+				<router-port>54000</router-port>
+				<router-port>55000</router-port>
+			</router-ports>
+		
+			<assigned-hosts>
+				<assigned-host id="2"></assigned-host>
+				<assigned-host id="3"></assigned-host>
+			</assigned-hosts>
+		</router>
+	
+		<router id="2">
+			<router-ip>160.0.2.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+			</router-ports>
+		
+			<assigned-hosts>
+				<assigned-host id="4"></assigned-host>
+				<assigned-host id="5"></assigned-host>
+			</assigned-hosts>
+		</router>
+	
+		<router id="3">
+			<router-ip>160.0.3.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+			</router-ports>
+		
+			<assigned-hosts>
+			</assigned-hosts>
+		</router>
+	
+		<router id="4">
+			<router-ip>160.0.4.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+				<router-port>53000</router-port>
+			</router-ports>
+		
+			<assigned-hosts>
+				<assigned-host id="6"></assigned-host>
+				<assigned-host id="7"></assigned-host>
+			</assigned-hosts>
+		</router>
+	
+		<router id="5">
+			<router-ip>160.0.0.1</router-ip>
+
+			<router-ports>
+				<router-port>50000</router-port>
+				<router-port>51000</router-port>
+				<router-port>52000</router-port>
+			</router-ports>
+		
+			<assigned-hosts>
+				<assigned-host id="1"></assigned-host>
+			</assigned-hosts>
+		</router>
+
+	</routers>
+
+	<cloud id="1">
+		<connections>
+
+			<connection id="1" type="host-router">
+				<endpoint type="host" id="1"></endpoint>
+				<endpoint type="router" id="5" port="50000" ></endpoint>
+			</connection>
+
+			<connection id="2" type="router-router">
+				<endpoint type="router" id="5" port="52000"></endpoint>
+				<endpoint type="router" id="1" port="51000"></endpoint>
+			</connection>
+
+			<connection id="3" type="router-router">
+				<endpoint type="router" id="5" port="51000"></endpoint>
+				<endpoint type="router" id="3" port="50000"></endpoint>
+			</connection>
+
+			<connection id="4" type="router-router">
+				<endpoint type="router" id="1" port="52000"></endpoint>
+				<endpoint type="router" id="3" port="52000"></endpoint>
+			</connection>
+
+			<connection id="5" type="host-router">
+				<endpoint type="host" id="2"></endpoint>
+				<endpoint type="router" id="1" port="55000"></endpoint>
+			</connection>
+
+			<connection id="6" type="host-router">
+				<endpoint type="host" id="3"></endpoint>
+				<endpoint type="router" id="1" port="54000"></endpoint>
+			</connection>
+
+			<connection id="7" type="router-router">
+				<endpoint type="router" id="1" port="53000"></endpoint>
+				<endpoint type="router" id="2" port="53000"></endpoint>
+			</connection>
+
+			<connection id="8" type="host-router">
+				<endpoint type="host" id="4"></endpoint>
+				<endpoint type="router" id="2" port="52000"></endpoint>
+			</connection>
+
+			<connection id="9" type="host-router">
+				<endpoint type="host" id="5"></endpoint>
+				<endpoint type="router" id="2" port="51000"></endpoint>
+			</connection>
+
+			<connection id="10" type="router-router">
+				<endpoint type="router" id="2" port="50000"></endpoint>
+				<endpoint type="router" id="4" port="52000"></endpoint>
+			</connection>
+
+			<connection id="11" type="router-router">
+				<endpoint type="router" id="3" port="51000"></endpoint>
+				<endpoint type="router" id="4" port="53000"></endpoint>
+			</connection>
+
+			<connection id="12" type="host-router">
+				<endpoint type="host" id="6"></endpoint>
+				<endpoint type="router" id="4" port="51000"></endpoint>
+			</connection>
+
+			<connection id="13" type="host-router">
+				<endpoint type="host" id="7"></endpoint>
+				<endpoint type="router" id="4" port="50000"></endpoint>
+			</connection>
+
+		</connections>
+	</cloud>
+
+	<management-center id="1">
+		<hosts-config>
+			
+			<host-possible-destinations host-id="1" >
+				<host-possible-destination id="1" destination-host-id="4" label="17" ></host-possible-destination>
+				<host-possible-destination id="2" destination-host-id="6" label="27" ></host-possible-destination>
+			</host-possible-destinations>	
+			
+			<host-possible-destinations host-id ="4" >
+				<host-possible-destination id="1" destination-host-id="1" label="22" ></host-possible-destination>
+			</host-possible-destinations>
+			
+			<host-possible-destinations host-id ="6" >
+				<host-possible-destination id="1" destination-host-id="1" label="61" ></host-possible-destination>
+			</host-possible-destinations>
+		
+		</hosts-config>
+		
+		<router-config>
+			<router-mpls-table router-id="1">
+				
+				<router-mpls-row row-id="1" input-port="51000" input-label="67" action="SWAP" output-port="53000" output-label="55" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="2" input-port="53000" input-label="58" action="SWAP" output-port="51000" output-label="68" next-action-row-id="0">
+				</router-mpls-row>
+			
+			</router-mpls-table>
+			
+			<router-mpls-table router-id="2">
+				
+				<router-mpls-row row-id="1" input-port="53000" input-label="55" action="POP" output-port="0" output-label="0" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="2" input-port="53000" input-label="35" action="SWAP" output-port="52000" output-label="21" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="3" input-port="53000" input-label="45" action="SWAP" output-port="50000" output-label="75" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="4" input-port="50000" input-label="76" action="SWAP" output-port="0" output-label="46" next-action-row-id="5">
+				</router-mpls-row>
+				<router-mpls-row row-id="5" input-port="50000" input-label="0" action="PUSH" output-port="53000" output-label="56" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="6" input-port="52000" input-label="22" action="SWAP" output-port="0" output-label="36" next-action-row-id="7">
+				</router-mpls-row>
+				<router-mpls-row row-id="7" input-port="52000" input-label="0" action="PUSH" output-port="53000" output-label="56" next-action-row-id="0">
+				</router-mpls-row>
+				
+			</router-mpls-table>
+			
+			<router-mpls-table router-id="4">
+				
+				<router-mpls-row row-id="1" input-port="52000" input-label="75" action="SWAP" output-port="51000" output-label="60" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="2" input-port="51000" input-label="61" action="SWAP" output-port="52000" output-label="76" next-action-row-id="0">
+				</router-mpls-row>
+			
+			</router-mpls-table>
+			
+			<router-mpls-table router-id="5">
+				
+				<router-mpls-row row-id="1" input-port="50000" input-label="17" action="SWAP" output-port="0" output-label="35" next-action-row-id="3">
+				</router-mpls-row>
+				<router-mpls-row row-id="2" input-port="50000" input-label="27" action="SWAP" output-port="52000" output-label="45" next-action-row-id="4">
+				</router-mpls-row>
+				<router-mpls-row row-id="3" input-port="50000" input-label="0" action="PUSH" output-port="52000" output-label="67" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="4" input-port="50000" input-label="0" action="PUSH" output-port="0" output-label="67" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="5" input-port="52000" input-label="68" action="POP" output-port="0" output-label="0" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="6" input-port="52000" input-label="36" action="SWAP" output-port="50000" output-label="18" next-action-row-id="0">
+				</router-mpls-row>
+				<router-mpls-row row-id="7" input-port="52000" input-label="46" action="SWAP" output-port="50000" output-label="28" next-action-row-id="0">
+				</router-mpls-row>
+				
+			</router-mpls-table>
+			
+		</router-config>
+		
+	</management-center>
+</config>

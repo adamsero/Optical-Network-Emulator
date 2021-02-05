@@ -1,0 +1,1 @@
+start .\..\NetworkNode\NetworkNode\bin\Debug\NetworkNode.exe ".\..\sharedResources\tsst_config.xml" "7"

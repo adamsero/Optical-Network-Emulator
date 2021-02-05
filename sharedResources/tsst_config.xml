@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<config>
+	<hosts>
+	
+		<host id="1" as-id="1">
+			<host-ip>10.0.1.2</host-ip>
+			<host-port>100</host-port>
+		</host>
+	
+		<host id="2" as-id="1">
+			<host-ip>10.0.2.2</host-ip>
+			<host-port>100</host-port>
+		</host>
+	
+		<host id="3" as-id="2">
+			<host-ip>10.0.5.2</host-ip>
+			<host-port>100</host-port>
+		</host>
+	
+		<host id="4" as-id="2">
+			<host-ip>10.0.4.2</host-ip>
+			<host-port>100</host-port>
+		</host>
+		
+	</hosts>
+	
+	<routers>
+		<router id="1" as-id="1" subnetwork-router="false">
+			<router-ip>10.0.1.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="2" as-id="1" subnetwork-router="false">
+			<router-ip>10.0.2.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="3" as-id="1" subnetwork-router="false">
+			<router-ip>10.0.3.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="4" as-id="2" subnetwork-router="false">
+			<router-ip>10.0.4.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="5" as-id="2" subnetwork-router="false">
+			<router-ip>10.0.5.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<!-- subnetwork-routers as-id="2" -->
+		<router id="6" as-id="2" subnetwork-router="true">
+			<router-ip>10.0.6.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="7" as-id="2" subnetwork-router="true">
+			<router-ip>10.0.7.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+				<router-port>400</router-port>
+			</router-ports>
+		</router>
+		
+		<router id="8" as-id="2" subnetwork-router="true">
+			<router-ip>10.0.8.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+
+		<router id="9" as-id="2" subnetwork-router="true">
+			<router-ip>10.0.9.1</router-ip>
+			<router-ports>
+				<router-port>100</router-port>
+				<router-port>200</router-port>
+				<router-port>300</router-port>
+			</router-ports>
+		</router>
+	</routers>
+	
+	
+	<cloud id="1">
+		<connections>
+			
+			<connection id="1" type="host-router" distance="1" max-bandwidth="150" external="false" as-id="1">
+				<endpoint type="host" id="1"></endpoint>
+				<endpoint type="router" id="1" port="100" ></endpoint>
+			</connection>
+			
+			<connection id="2" type="host-router" distance="1" max-bandwidth="150" external="false" as-id="1">
+				<endpoint type="host" id="2"></endpoint>
+				<endpoint type="router" id="2" port="100" ></endpoint>
+			</connection>
+			
+			<connection id="3" type="host-router" distance="1" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="host" id="3"></endpoint>
+				<endpoint type="router" id="5" port="100" ></endpoint>
+			</connection>
+			
+			<connection id="4" type="host-router" distance="1" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="host" id="4"></endpoint>
+				<endpoint type="router" id="4" port="100" ></endpoint>
+			</connection>
+			
+			<connection id="5" type="router-router" distance="20" max-bandwidth="150" external="false" as-id="1">
+				<endpoint type="router" id="1" port="200"></endpoint>
+				<endpoint type="router" id="2" port="200"></endpoint>
+			</connection>
+			
+			<connection id="6" type="router-router" distance="40" max-bandwidth="150" external="false" as-id="1">
+				<endpoint type="router" id="2" port="300"></endpoint>
+				<endpoint type="router" id="3" port="300"></endpoint>
+			</connection>
+			
+			<connection id="7" type="router-router" distance="70" max-bandwidth="150" external="false" as-id="1">
+				<endpoint type="router" id="1" port="300"></endpoint>
+				<endpoint type="router" id="3" port="100"></endpoint>
+			</connection>
+			
+			<connection id="8" type="router-router" distance="300" max-bandwidth="150" external="true" as-id="0">
+				<endpoint type="router" id="3" port="200"></endpoint>
+				<endpoint type="router" id="6" port="100"></endpoint>
+			</connection>
+			
+			<connection id="9" type="router-router" distance="20" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="4" port="200"></endpoint>
+				<endpoint type="router" id="5" port="200"></endpoint>
+			</connection>
+			
+			<connection id="10" type="router-router" distance="50" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="4" port="300"></endpoint>
+				<endpoint type="router" id="7" port="100"></endpoint>
+			</connection>
+			
+			<connection id="11" type="router-router" distance="20" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="5" port="300"></endpoint>
+				<endpoint type="router" id="8" port="100"></endpoint>
+			</connection>
+		
+			<connection id="12" type="router-router" distance="1" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="7" port="300"></endpoint>
+				<endpoint type="router" id="9" port="100"></endpoint>
+			</connection>
+			
+			<connection id="13" type="router-router" distance="5" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="6" port="200"></endpoint>
+				<endpoint type="router" id="7" port="400"></endpoint>
+			</connection>
+			
+			<connection id="14" type="router-router" distance="7" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="7" port="200"></endpoint>
+				<endpoint type="router" id="8" port="200"></endpoint>
+			</connection>
+			
+			<connection id="15" type="router-router" distance="2" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="6" port="300"></endpoint>
+				<endpoint type="router" id="9" port="300"></endpoint>
+			</connection>
+			
+			<connection id="16" type="router-router" distance="4" max-bandwidth="150" external="false" as-id="2">
+				<endpoint type="router" id="8" port="300"></endpoint>
+				<endpoint type="router" id="9" port="200"></endpoint>
+			</connection>
+			
+		</connections>
+	</cloud>
+	
+	<management-center id="1">
+		
+		<!-- DO UZUPELNIENIA JAK BEDZIE POTRZEBNE -->
+		
+	</management-center>
+	
+</config>
