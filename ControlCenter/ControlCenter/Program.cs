@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Threading;
 
 namespace ControlCenter {
     static class Program {
@@ -33,15 +32,7 @@ namespace ControlCenter {
                         //ConfigLoader.loadConfig(config);
                         //String config = String.Concat(File.ReadAllLines(args[1]));
                         //ConfigLoader.LoadConfig(config, args[2]);
-                        List<NCC> ncc = new List<NCC>();
-                        NCC ncc1 = new NCC(1);
-                        NCC ncc2 = new NCC(2);
-                        ncc1.SetOtherNCC(ncc2);
-                        ncc2.SetOtherNCC(ncc1);
-                        ncc1.getConnectionControl().GetRouteControl().setOtherRC();
-                        ncc2.getConnectionControl().GetRouteControl().setOtherRC();
-                        ncc.Add(ncc1);
-                        ncc.Add(ncc2);
+                        NCC ncc = new NCC();
                         server = new Server(ncc);
                     }
                     catch (Exception e) {

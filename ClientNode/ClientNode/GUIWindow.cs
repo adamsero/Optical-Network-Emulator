@@ -92,11 +92,11 @@ namespace ClientNode {
                         GUIWindow.PrintLog("Destination name and throughput must not be empty!");
                         break; 
                     }                                            
-                    Program.cpcc.sendCallRequestToNCC("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
+                    Program.cpcc.SendCallRequest("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
                     break;
 
                 case "END":                  
-                    Program.cpcc.sendCallTeardownToNCC("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
+                    //Program.cpcc.sendCallTeardownToNCC("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
                     break;
             }
         }

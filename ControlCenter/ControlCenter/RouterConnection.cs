@@ -12,7 +12,6 @@ namespace ControlCenter {
         public readonly Router router;
         private readonly TcpClient client;
         private readonly int id;
-        private readonly int asID;
         private NetworkStream stream;
         private List<int> currentConnections = new List<int>();
         private Server server;
@@ -20,11 +19,10 @@ namespace ControlCenter {
 
         private StreamReader reader;
 
-        public RouterConnection(Router router, TcpClient client, int id, int asID, Server server) {
+        public RouterConnection(Router router, TcpClient client, int id, Server server) {
             this.router = router;
             this.client = client;
             this.id = id;
-            this.asID = asID;
             this.server = server;
             stream = client.GetStream();
             reader = new StreamReader(stream);
@@ -54,10 +52,10 @@ namespace ControlCenter {
                         }
 
                         if(GUIWindow.ShowKeepAlive())
-                            GUIWindow.PrintLog("RC: KEEP-ALIVE received from Router #" + id, asID);
-                    } catch(IOException e) {
+                            GUIWindow.PrintLog("RC: KEEP-ALIVE received from Router #" + id);
+                    } catch(IOException) {
                         //GUIWindow.PrintLog("Failed to receive KEEP-ALIVE from Router #" + id);
-                        GUIWindow.PrintLog("RC: Router #" + id + " has stopped working.", asID);
+                        GUIWindow.PrintLog("RC: Router #" + id + " has stopped working.");
                         router.working = false;
                         working = false;
                         server.RemoveRouterConnection(this);
@@ -74,8 +72,8 @@ namespace ControlCenter {
                 byte[] bytes = Server.SerializeObject(routingTable);
                 stream.Write(bytes, 0, bytes.Length);
                 string subnetworkTag = id > 5 ? "SN" : "";
-                string tag = subnetworkTag.Length == 0 ? asID.ToString() : subnetworkTag;
-                RouteControl.savedLogs.Add(new Tuple<string, string>(tag, "Sending Connection Table to Router #" + id));
+                //string tag = subnetworkTag.Length == 0 ? asID.ToString() : subnetworkTag;
+                //RouteControl.savedLogs.Add(new Tuple<string, string>(tag, "Sending Connection Table to Router #" + id));
                 //GUIWindow.PrintLog("RC: Seding Connection Table to Router #" + id, asID);
             } catch(Exception e) {
                 GUIWindow.PrintLog(e.Message);

@@ -46,16 +46,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Algorithms.cs" />
-    <Compile Include="ConnectionControl.cs" />
     <Compile Include="Graph.cs" />
-    <Compile Include="LRM.cs" />
+    <Compile Include="NCC.cs" />
     <Compile Include="Path.cs" />
-    <Compile Include="RouteControl.cs" />
     <Compile Include="ConfigLoader.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="HostConnection.cs" />
-    <Compile Include="NCC.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Router.cs" />
     <Compile Include="RouterConnection.cs" />
