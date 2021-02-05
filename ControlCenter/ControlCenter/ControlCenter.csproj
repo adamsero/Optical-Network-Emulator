@@ -45,17 +45,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Algorithms.cs" />
-    <Compile Include="Graph.cs" />
-    <Compile Include="NCC.cs" />
-    <Compile Include="Path.cs" />
+    <Compile Include="InterCenterCommunication\ChildConnection.cs" />
+    <Compile Include="InterCenterCommunication\ParentConnection.cs" />
+    <Compile Include="Topology\Algorithms.cs" />
+    <Compile Include="Topology\Graph.cs" />
+    <Compile Include="Components\NCC.cs" />
+    <Compile Include="Topology\Path.cs" />
     <Compile Include="ConfigLoader.cs" />
-    <Compile Include="Connection.cs" />
-    <Compile Include="Host.cs" />
-    <Compile Include="HostConnection.cs" />
-    <Compile Include="Node.cs" />
-    <Compile Include="Router.cs" />
-    <Compile Include="RouterConnection.cs" />
+    <Compile Include="Topology\Connection.cs" />
+    <Compile Include="Topology\Host.cs" />
+    <Compile Include="Topology\HostConnection.cs" />
+    <Compile Include="Topology\Node.cs" />
+    <Compile Include="InterCenterCommunication\InterCcCommunicationServer.cs" />
+    <Compile Include="InterCenterCommunication\PeerConnection.cs" />
+    <Compile Include="Topology\Router.cs" />
+    <Compile Include="Topology\RouterConnection.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="GUIWindow.cs">
       <SubType>Form</SubType>
@@ -90,5 +94,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

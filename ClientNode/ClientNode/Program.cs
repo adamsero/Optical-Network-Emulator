@@ -63,7 +63,7 @@ namespace ClientNode {
             }).Start();
 
             new Thread(() => {
-                Thread.Sleep(1000);
+                Thread.Sleep(2500);
                 /*lock (Program.waiterCloud) {
                     Monitor.Wait(Program.waiterCloud);
                 }*/

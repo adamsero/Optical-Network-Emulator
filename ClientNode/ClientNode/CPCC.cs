@@ -11,7 +11,7 @@ using System.Windows.Forms;
 namespace ClientNode {
     //Calling Party Call Controller
     class CPCC {
-        private readonly int centerPort = 15000;
+        private readonly int centerPort = ConfigLoader.ccPort;
         private static NetworkStream stream;
         private static StreamReader reader;
         private static StreamWriter writer;
@@ -25,24 +25,13 @@ namespace ClientNode {
                 writer = new StreamWriter(stream);
 
                 GUIWindow.PrintLog("Connection with Control Center has been established");
-                
+
                 GUIWindow.PrintLog("Sent registration request to Control Center");
                 SendRegistrationRequest();
                 new Thread(ReceiveMessages).Start();
-                //TEST
-                //Thread.Sleep(5000);
-                //if (ConfigLoader.nodeID == 1) {
-                //    String receiver = GUIWindow.GetReceiver();
-                //    int requestedBandwidth = GUIWindow.GetRequestedBandwidth();
-                //    GUIWindow.PrintLog(requestedBandwidth.ToString());
-                //    GUIWindow.PrintLog(receiver);
-                //    sendCallRequestToNCC("10.0.1.2", "10.0.5.2", 10);
-                //    //sendCallTeardownToNCC("10.0.1.2", "10.0.2.2", 10);
-                //}
-            }
-            catch (SocketException se) {
+            } catch (SocketException se) {
                 GUIWindow.PrintLog("Connection with Control Center has NOT been established");
-                GUIWindow.PrintLog(se.Message); 
+                GUIWindow.PrintLog(se.Message);
             }
         }
 

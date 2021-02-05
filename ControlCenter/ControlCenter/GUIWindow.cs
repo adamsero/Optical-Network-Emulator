@@ -103,6 +103,16 @@ namespace ControlCenter {
             }
         }
 
+        public static void ChangeWindowName(string newName) {
+            instance.Invoke((MethodInvoker)delegate {
+                instance.Text = newName;
+            });
+
+            instance.NameLabel.Invoke((MethodInvoker)delegate {
+                instance.NameLabel.Text = newName;
+            });
+        }
+
         public static bool ShowKeepAlive() {
             return instance.KeepAliveCheckBox.Checked;
         }

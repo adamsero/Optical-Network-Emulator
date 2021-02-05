@@ -44,7 +44,7 @@
             this.NameLabel.Font = new System.Drawing.Font("Roboto Light", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.NameLabel.Location = new System.Drawing.Point(0, 0);
             this.NameLabel.Name = "NameLabel";
-            this.NameLabel.Size = new System.Drawing.Size(229, 40);
+            this.NameLabel.Size = new System.Drawing.Size(316, 40);
             this.NameLabel.TabIndex = 1;
             this.NameLabel.Text = "Control Center";
             this.NameLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -90,7 +90,7 @@
             this.ChannelTab.Controls.Add(this.ChannelTable);
             this.ChannelTab.Location = new System.Drawing.Point(4, 24);
             this.ChannelTab.Name = "ChannelTab";
-            this.ChannelTab.Size = new System.Drawing.Size(742, 408);
+            this.ChannelTab.Size = new System.Drawing.Size(455, 408);
             this.ChannelTab.TabIndex = 2;
             this.ChannelTab.Text = "Channels";
             this.ChannelTab.UseVisualStyleBackColor = true;
@@ -117,7 +117,7 @@
             this.ChannelTable.ReadOnly = true;
             this.ChannelTable.RowHeadersVisible = false;
             this.ChannelTable.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ChannelTable.Size = new System.Drawing.Size(742, 408);
+            this.ChannelTable.Size = new System.Drawing.Size(455, 408);
             this.ChannelTable.TabIndex = 1;
             this.ChannelTable.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.ChannelTable_CellContentClick);
             // 
@@ -147,7 +147,7 @@
             // 
             this.KeepAliveCheckBox.AutoSize = true;
             this.KeepAliveCheckBox.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.KeepAliveCheckBox.Location = new System.Drawing.Point(235, 6);
+            this.KeepAliveCheckBox.Location = new System.Drawing.Point(228, 38);
             this.KeepAliveCheckBox.Name = "KeepAliveCheckBox";
             this.KeepAliveCheckBox.Size = new System.Drawing.Size(121, 19);
             this.KeepAliveCheckBox.TabIndex = 16;

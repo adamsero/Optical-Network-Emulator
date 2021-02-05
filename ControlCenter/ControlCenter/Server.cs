@@ -15,7 +15,7 @@ namespace ControlCenter {
 
         private readonly TcpListener server;
         //TODO: port wczytac z konfigu
-        private readonly int port = 15000;
+        private readonly int port = ConfigLoader.ccListeningPort;
         private readonly string ip = "localhost";
         private readonly IPAddress ipAddress;
         private readonly NCC ncc;

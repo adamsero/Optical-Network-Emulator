@@ -1,4 +1,6 @@
-get-process | where-object {$_.MainWindowTitle -eq "ControlCenter"} | stop-process
+get-process | where-object {$_.MainWindowTitle -eq "ControlCenter1"} | stop-process
+get-process | where-object {$_.MainWindowTitle -eq "ControlCenter2"} | stop-process
+get-process | where-object {$_.MainWindowTitle -eq "ControlCenter3"} | stop-process
 
 get-process | where-object {$_.MainWindowTitle -eq "Cloud"} | stop-process
 
@@ -18,3 +20,4 @@ get-process | where-object {$_.MainWindowTitle -eq "Router6"} | stop-process
 get-process | where-object {$_.MainWindowTitle -eq "Router7"} | stop-process
 get-process | where-object {$_.MainWindowTitle -eq "Router8"} | stop-process
 get-process | where-object {$_.MainWindowTitle -eq "Router9"} | stop-process
+get-process | where-object {$_.MainWindowTitle -eq "Router10"} | stop-process

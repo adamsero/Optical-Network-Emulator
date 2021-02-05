@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace NetworkNode {
     class ControlCenterConnection {
-        private readonly int centerPort = 15000;
+        private readonly int centerPort = ConfigLoader.ccPort;
         private static bool connected = false;
         private static NetworkStream stream;
         private static StreamReader reader;
