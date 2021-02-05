@@ -166,6 +166,7 @@ namespace ControlCenter {
 			ConfigLoader.hosts = hosts;
 			ConfigLoader.routers = routers;
 			ConfigLoader.connections = connections;
-		}
+            GUIWindow.ChangeWindowName("ControlCenter" + ccID);
+        }
 	}
 }

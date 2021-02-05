@@ -23,7 +23,7 @@
         /// jej zawartości w edytorze kodu.
         /// </summary>
         private void InitializeComponent() {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.NameLabel = new System.Windows.Forms.Label();
             this.LogBox = new System.Windows.Forms.TextBox();
             this.TabControl = new System.Windows.Forms.TabControl();
@@ -44,7 +44,7 @@
             this.NameLabel.Font = new System.Drawing.Font("Roboto Light", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.NameLabel.Location = new System.Drawing.Point(0, 0);
             this.NameLabel.Name = "NameLabel";
-            this.NameLabel.Size = new System.Drawing.Size(131, 42);
+            this.NameLabel.Size = new System.Drawing.Size(147, 42);
             this.NameLabel.TabIndex = 0;
             this.NameLabel.Text = "Router";
             this.NameLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -103,14 +103,14 @@
             this.RoutingTable.AllowUserToResizeRows = false;
             this.RoutingTable.BackgroundColor = System.Drawing.Color.White;
             this.RoutingTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.White;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.RoutingTable.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.White;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.RoutingTable.DefaultCellStyle = dataGridViewCellStyle1;
             this.RoutingTable.Dock = System.Windows.Forms.DockStyle.Fill;
             this.RoutingTable.Location = new System.Drawing.Point(3, 3);
             this.RoutingTable.Name = "RoutingTable";
@@ -146,9 +146,9 @@
             // ownIP
             // 
             this.ownIP.Font = new System.Drawing.Font("Roboto Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.ownIP.Location = new System.Drawing.Point(125, 14);
+            this.ownIP.Location = new System.Drawing.Point(137, 14);
             this.ownIP.Name = "ownIP";
-            this.ownIP.Size = new System.Drawing.Size(137, 24);
+            this.ownIP.Size = new System.Drawing.Size(136, 24);
             this.ownIP.TabIndex = 16;
             this.ownIP.Text = "255.255.255.255";
             this.ownIP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;

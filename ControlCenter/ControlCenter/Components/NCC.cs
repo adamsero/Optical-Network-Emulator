@@ -22,16 +22,28 @@ namespace ControlCenter {
                 case "CallRequest":
                     GUIWindow.PrintLog("NCC: Received CallRequest(" + data["hostX"] + ", " + data["hostY"] + ", " + data["speed"] + " Gb/s) from CPCC");
 
-                    
                     Tuple<string, string> routerIPs = HandleDirectory(data["hostX"], data["hostY"]);
                     if(routerIPs.Item1.Equals("WRONG NAME") || routerIPs.Item2.Equals("WRONG NAME")) {
+                        GUIWindow.PrintLog("NCC: Host name does not exist");
                         GUIWindow.PrintLog("NCC: Sent CallRequestResponse(UNSUCCESSFUL)");
+                        RefuseConnection(caller);
+                        return;
+                    } else if(routerIPs.Item1.Equals(routerIPs.Item2)) {
+                        GUIWindow.PrintLog("NCC: Target Host name is the same as the source one");
+                        GUIWindow.PrintLog("NCC: Sent CallRequestResponse(UNUSCCESSFUL)");
                         RefuseConnection(caller);
                         return;
                     }
                     HandlePolicy();
 
-                    //tutaj CallCoordination
+                    string message = "component:NCC;name:CallCoordination;routerX:" + routerIPs.Item1 + ";routerY:" + routerIPs.Item2 + ";speed:" + data["speed"];
+                    Program.peerConnection.SendMessage(message);
+                    GUIWindow.PrintLog("NCC: Sent CallCoordination(" + routerIPs.Item1 + ", " + routerIPs.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
+
+                    break;
+
+                case "CallCoordination":
+                    GUIWindow.PrintLog("NCC: Received CallCoordination(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from other NCC");
 
                     break;
             }
