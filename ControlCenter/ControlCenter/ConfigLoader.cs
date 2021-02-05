@@ -15,6 +15,15 @@ namespace ControlCenter {
 		//public static LinkedList<Connection> connections;
 		public static Dictionary<int, Connection> connections;
 
+		public static LinkedList<Host> myHosts;
+		public static LinkedList<Host> otherHosts;
+
+		public static LinkedList<Router> myRouters;
+		public static LinkedList<Router> otherRouters;
+
+		public static Dictionary<int, Connection> myConnections;
+		public static Dictionary<int, Connection> otherConnections;
+
 		public ConfigLoader() { }
 
 		public static LinkedList<Host> GetHosts() {
@@ -166,6 +175,47 @@ namespace ControlCenter {
 			ConfigLoader.hosts = hosts;
 			ConfigLoader.routers = routers;
 			ConfigLoader.connections = connections;
+			sortItems();
+		}
+
+		public static void sortItems() {
+
+			myHosts = new LinkedList<Host>();
+			otherHosts = new LinkedList<Host>();
+
+			myRouters = new LinkedList<Router>();
+			otherRouters = new LinkedList<Router>();
+
+			myConnections = new Dictionary<int, Connection>();
+			otherConnections = new Dictionary<int, Connection>();
+
+			foreach (Host h in hosts) {
+				if (h.GetAsID() == ccID) {
+					myHosts.AddLast(h);
+				}
+				else {
+					otherHosts.AddLast(h);
+				}
+			}
+
+			foreach (Router r in routers) {
+				if (r.GetAsID() == ccID) {
+					myRouters.AddLast(r);
+				}
+				else {
+					otherRouters.AddLast(r);
+				}
+			}
+
+			foreach (var c in connections) {
+				if (c.Value.GetAsID() == ccID) {
+					myConnections.Add(c.Value.GetID(),c.Value);
+				}
+				else {
+					otherConnections.Add(c.Value.GetID(), c.Value);
+				}
+			}
+
 		}
 	}
 }
