@@ -8,6 +8,8 @@ using System.Xml;
 namespace ControlCenter {
 	class ConfigLoader {
 
+		public static int ccID;
+		public static int ccListeningPort;
 		public static LinkedList<Host> hosts;
 		public static LinkedList<Router> routers;
 		//public static LinkedList<Connection> connections;
@@ -23,7 +25,9 @@ namespace ControlCenter {
 			return routers;
 		}
 
-		public static void loadConfig(String config) {
+		public static void loadConfig(String config, String id) {
+
+			ccID = Int32.Parse(id);
 
 			XmlDocument doc = new XmlDocument();
 			doc.LoadXml(config);
@@ -33,12 +37,13 @@ namespace ControlCenter {
 			String ip;
 			int port;
 			bool subnetworkRouter = false;
-			LinkedList<int> ports = new LinkedList<int>();
+			//LinkedList<int> ports = new LinkedList<int>();
 
 			XmlElement root = doc.DocumentElement;
 			XmlNodeList hostNodesList = root.SelectNodes("/config/hosts/host");
 			XmlNodeList routerNodesList = root.SelectNodes("/config/routers/router");
 			XmlNodeList connectionNodesList = root.SelectNodes("/config/cloud/connections/connection");
+			XmlNodeList controlCenterNodesList = root.SelectNodes("/config/control-centers/control-center");
 
 			//HOSTS:
 			LinkedList<Host> hosts = new LinkedList<Host>();
@@ -48,14 +53,11 @@ namespace ControlCenter {
 			//LinkedList<Connection> connections = new LinkedList<Connection>();
 			Dictionary<int, Connection> connections = new Dictionary<int, Connection>();
 
-			//hosty
-			foreach (XmlNode node in hostNodesList) {
-				nodeID = Int32.Parse(node.Attributes["id"].Value);
-				asID = Int32.Parse(node.Attributes["as-id"].Value);
-				ip = node.SelectSingleNode("host-ip").InnerText;
-				port = Int32.Parse(node.SelectSingleNode("host-port").InnerText);
-
-				hosts.AddLast(new Host(nodeID, ip, asID, port)); 
+			foreach (XmlNode n in controlCenterNodesList) {
+				if (Int32.Parse(n.Attributes["id"].Value) == ccID) {
+					ccListeningPort = Int32.Parse(n.Attributes["listening-port"].Value);
+					break;
+				}
 			}
 
 			//routery
@@ -66,6 +68,7 @@ namespace ControlCenter {
 				ip = node.SelectSingleNode("router-ip").InnerText;
 				subnetworkRouter = Boolean.Parse(node.Attributes["subnetwork-router"].Value);
 
+				LinkedList<int> ports = new LinkedList<int>();
 				XmlNodeList routerPortsList = node.SelectNodes("router-ports/router-port");
 				foreach (XmlNode portNode in routerPortsList) {
 					ports.AddLast(Int32.Parse(portNode.InnerText));
@@ -73,7 +76,24 @@ namespace ControlCenter {
 				routers.AddLast(new Router(nodeID, ip, asID, ports, subnetworkRouter));
 			}
 
-			
+			//hosty
+			foreach (XmlNode node in hostNodesList) {
+				nodeID = Int32.Parse(node.Attributes["id"].Value);
+				asID = Int32.Parse(node.Attributes["as-id"].Value);
+				ip = node.SelectSingleNode("host-ip").InnerText;
+				port = Int32.Parse(node.SelectSingleNode("host-port").InnerText);
+				
+				Router neighbor = null;
+				foreach (Router r in routers) {
+					if (r.GetRouterID() == Int32.Parse(node.Attributes["router-id"].Value)) {
+						neighbor = r;
+						break;
+					}
+				}
+
+				hosts.AddLast(new Host(nodeID, ip, asID, port, neighbor)); 
+			}
+
 			//polaczenia
 			foreach (XmlNode node in connectionNodesList) {
 				nodeID = 0;

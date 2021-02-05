@@ -11,6 +11,7 @@ namespace NetworkNode {
 		public static int nodeID; 
 		public static String ip;
 		public static int asID;
+		public static int ccPort;
 		public static bool subnetworkRouter = false;
 		public static readonly LinkedList<int> ports = new LinkedList<int>();	    //ID|IP|PORT
 
@@ -20,6 +21,7 @@ namespace NetworkNode {
 			doc.LoadXml(file);
 			XmlElement root = doc.DocumentElement;
 			XmlNodeList routerNodesList = root.SelectNodes("/config/routers/router");
+			XmlNodeList controlCenterList = root.SelectNodes("/config/control-centers/control-center");
 
 			nodeID = Int32.Parse(id);
 		
@@ -32,6 +34,12 @@ namespace NetworkNode {
 					XmlNodeList routerPortsList = node.SelectNodes("router-ports/router-port");
 					foreach (XmlNode portNode in routerPortsList) {
 						ports.AddLast(Int32.Parse(portNode.InnerText));
+					}
+					foreach (XmlNode n in controlCenterList) {
+						if (Int32.Parse(n.Attributes["id"].Value) == asID) {
+							ccPort = Int32.Parse(n.Attributes["listening-port"].Value);
+							break;
+						}
 					}
 					break;
 				}

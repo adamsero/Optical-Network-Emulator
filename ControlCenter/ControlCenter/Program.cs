@@ -23,10 +23,14 @@ namespace ControlCenter {
 
                     Thread.Sleep(1000);
                     try {
+                        //String config = String.Concat(File.ReadAllLines(args[1]));
+                        //ConfigLoader.LoadConfig(config, args[2]);
 
-                        String config = String.Concat(File.ReadAllLines("./../sharedResources/tsst_config.xml")); 
+                        String config = String.Concat(File.ReadAllLines("./../../../../sharedResources/tsst_config.xml")); 
+                        ConfigLoader.loadConfig(config, "1");
+
                         //String config = String.Concat(File.ReadAllLines("./../../../../sharedResources/tsst_config.xml"));
-                        ConfigLoader.loadConfig(config);
+                        //ConfigLoader.loadConfig(config);
                         //String config = String.Concat(File.ReadAllLines(args[1]));
                         //ConfigLoader.LoadConfig(config, args[2]);
                         List<NCC> ncc = new List<NCC>();
