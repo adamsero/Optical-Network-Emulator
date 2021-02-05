@@ -36,7 +36,7 @@ namespace ClientNode
 
                 new Thread(ReceiveMessages).Start();
             }
-            catch (SocketException se) {
+            catch (SocketException) {
                 GUIWindow.PrintLog("Connection with Cloud has NOT been established :(");
                 connected = false;
             }

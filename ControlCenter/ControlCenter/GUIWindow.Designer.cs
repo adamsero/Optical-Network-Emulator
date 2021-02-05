@@ -26,19 +26,16 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.NameLabel = new System.Windows.Forms.Label();
             this.TabControl = new System.Windows.Forms.TabControl();
-            this.AS1 = new System.Windows.Forms.TabPage();
+            this.Logs = new System.Windows.Forms.TabPage();
             this.LogBox1 = new System.Windows.Forms.TextBox();
-            this.AS2 = new System.Windows.Forms.TabPage();
-            this.LogBox2 = new System.Windows.Forms.TextBox();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.ChannelTab = new System.Windows.Forms.TabPage();
             this.ChannelTable = new System.Windows.Forms.DataGridView();
             this.ClearButton = new System.Windows.Forms.Button();
             this.PauseLogsCheckBox = new System.Windows.Forms.CheckBox();
             this.KeepAliveCheckBox = new System.Windows.Forms.CheckBox();
             this.TabControl.SuspendLayout();
-            this.AS1.SuspendLayout();
-            this.AS2.SuspendLayout();
-            this.tabPage1.SuspendLayout();
+            this.Logs.SuspendLayout();
+            this.ChannelTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChannelTable)).BeginInit();
             this.SuspendLayout();
             // 
@@ -54,26 +51,25 @@
             // 
             // TabControl
             // 
-            this.TabControl.Controls.Add(this.AS1);
-            this.TabControl.Controls.Add(this.AS2);
-            this.TabControl.Controls.Add(this.tabPage1);
+            this.TabControl.Controls.Add(this.Logs);
+            this.TabControl.Controls.Add(this.ChannelTab);
             this.TabControl.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.TabControl.Location = new System.Drawing.Point(9, 43);
             this.TabControl.Name = "TabControl";
             this.TabControl.SelectedIndex = 0;
-            this.TabControl.Size = new System.Drawing.Size(750, 436);
+            this.TabControl.Size = new System.Drawing.Size(463, 436);
             this.TabControl.TabIndex = 5;
             // 
-            // AS1
+            // Logs
             // 
-            this.AS1.Controls.Add(this.LogBox1);
-            this.AS1.Location = new System.Drawing.Point(4, 24);
-            this.AS1.Name = "AS1";
-            this.AS1.Padding = new System.Windows.Forms.Padding(3);
-            this.AS1.Size = new System.Drawing.Size(742, 408);
-            this.AS1.TabIndex = 0;
-            this.AS1.Text = "AS1";
-            this.AS1.UseVisualStyleBackColor = true;
+            this.Logs.Controls.Add(this.LogBox1);
+            this.Logs.Location = new System.Drawing.Point(4, 24);
+            this.Logs.Name = "Logs";
+            this.Logs.Padding = new System.Windows.Forms.Padding(3);
+            this.Logs.Size = new System.Drawing.Size(455, 408);
+            this.Logs.TabIndex = 0;
+            this.Logs.Text = "Logs";
+            this.Logs.UseVisualStyleBackColor = true;
             // 
             // LogBox1
             // 
@@ -85,43 +81,19 @@
             this.LogBox1.Name = "LogBox1";
             this.LogBox1.ReadOnly = true;
             this.LogBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.LogBox1.Size = new System.Drawing.Size(736, 402);
+            this.LogBox1.Size = new System.Drawing.Size(449, 402);
             this.LogBox1.TabIndex = 8;
             this.LogBox1.TextChanged += new System.EventHandler(this.LogBox1_TextChanged);
             // 
-            // AS2
+            // ChannelTab
             // 
-            this.AS2.Controls.Add(this.LogBox2);
-            this.AS2.Location = new System.Drawing.Point(4, 24);
-            this.AS2.Name = "AS2";
-            this.AS2.Padding = new System.Windows.Forms.Padding(3);
-            this.AS2.Size = new System.Drawing.Size(588, 408);
-            this.AS2.TabIndex = 1;
-            this.AS2.Text = "AS2";
-            this.AS2.UseVisualStyleBackColor = true;
-            // 
-            // LogBox2
-            // 
-            this.LogBox2.BackColor = System.Drawing.Color.White;
-            this.LogBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LogBox2.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.LogBox2.Location = new System.Drawing.Point(3, 3);
-            this.LogBox2.Multiline = true;
-            this.LogBox2.Name = "LogBox2";
-            this.LogBox2.ReadOnly = true;
-            this.LogBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.LogBox2.Size = new System.Drawing.Size(582, 402);
-            this.LogBox2.TabIndex = 9;
-            // 
-            // tabPage1
-            // 
-            this.tabPage1.Controls.Add(this.ChannelTable);
-            this.tabPage1.Location = new System.Drawing.Point(4, 24);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Size = new System.Drawing.Size(588, 408);
-            this.tabPage1.TabIndex = 2;
-            this.tabPage1.Text = "Channel";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.ChannelTab.Controls.Add(this.ChannelTable);
+            this.ChannelTab.Location = new System.Drawing.Point(4, 24);
+            this.ChannelTab.Name = "ChannelTab";
+            this.ChannelTab.Size = new System.Drawing.Size(742, 408);
+            this.ChannelTab.TabIndex = 2;
+            this.ChannelTab.Text = "Channels";
+            this.ChannelTab.UseVisualStyleBackColor = true;
             // 
             // ChannelTable
             // 
@@ -145,14 +117,14 @@
             this.ChannelTable.ReadOnly = true;
             this.ChannelTable.RowHeadersVisible = false;
             this.ChannelTable.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ChannelTable.Size = new System.Drawing.Size(588, 408);
+            this.ChannelTable.Size = new System.Drawing.Size(742, 408);
             this.ChannelTable.TabIndex = 1;
             this.ChannelTable.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.ChannelTable_CellContentClick);
             // 
             // ClearButton
             // 
             this.ClearButton.Font = new System.Drawing.Font("Roboto Light", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.ClearButton.Location = new System.Drawing.Point(637, 31);
+            this.ClearButton.Location = new System.Drawing.Point(355, 31);
             this.ClearButton.Name = "ClearButton";
             this.ClearButton.Size = new System.Drawing.Size(110, 30);
             this.ClearButton.TabIndex = 14;
@@ -164,7 +136,7 @@
             // 
             this.PauseLogsCheckBox.AutoSize = true;
             this.PauseLogsCheckBox.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.PauseLogsCheckBox.Location = new System.Drawing.Point(654, 6);
+            this.PauseLogsCheckBox.Location = new System.Drawing.Point(372, 6);
             this.PauseLogsCheckBox.Name = "PauseLogsCheckBox";
             this.PauseLogsCheckBox.Size = new System.Drawing.Size(93, 19);
             this.PauseLogsCheckBox.TabIndex = 15;
@@ -175,7 +147,7 @@
             // 
             this.KeepAliveCheckBox.AutoSize = true;
             this.KeepAliveCheckBox.Font = new System.Drawing.Font("Roboto Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.KeepAliveCheckBox.Location = new System.Drawing.Point(515, 6);
+            this.KeepAliveCheckBox.Location = new System.Drawing.Point(235, 6);
             this.KeepAliveCheckBox.Name = "KeepAliveCheckBox";
             this.KeepAliveCheckBox.Size = new System.Drawing.Size(121, 19);
             this.KeepAliveCheckBox.TabIndex = 16;
@@ -187,7 +159,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
-            this.ClientSize = new System.Drawing.Size(759, 488);
+            this.ClientSize = new System.Drawing.Size(484, 491);
             this.Controls.Add(this.KeepAliveCheckBox);
             this.Controls.Add(this.PauseLogsCheckBox);
             this.Controls.Add(this.ClearButton);
@@ -197,11 +169,9 @@
             this.Text = "ControlCenter";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.TabControl.ResumeLayout(false);
-            this.AS1.ResumeLayout(false);
-            this.AS1.PerformLayout();
-            this.AS2.ResumeLayout(false);
-            this.AS2.PerformLayout();
-            this.tabPage1.ResumeLayout(false);
+            this.Logs.ResumeLayout(false);
+            this.Logs.PerformLayout();
+            this.ChannelTab.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.ChannelTable)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -212,14 +182,12 @@
 
         private System.Windows.Forms.Label NameLabel;
         private System.Windows.Forms.TabControl TabControl;
-        private System.Windows.Forms.TabPage AS1;
+        private System.Windows.Forms.TabPage Logs;
         private System.Windows.Forms.TextBox LogBox1;
-        private System.Windows.Forms.TabPage AS2;
         private System.Windows.Forms.Button ClearButton;
         private System.Windows.Forms.CheckBox PauseLogsCheckBox;
-        private System.Windows.Forms.TextBox LogBox2;
         private System.Windows.Forms.CheckBox KeepAliveCheckBox;
-        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage ChannelTab;
         private System.Windows.Forms.DataGridView ChannelTable;
     }
 }

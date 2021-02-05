@@ -18,7 +18,6 @@ namespace ControlCenter {
             Router initialRouter = null;
             Router finalRouter = null;
 
-            int i = 0;
             foreach(Connection edge in ConfigLoader.connections.Values) {
                 Node n1 = edge.endPoints.Item1;
                 Node n2 = edge.endPoints.Item2;

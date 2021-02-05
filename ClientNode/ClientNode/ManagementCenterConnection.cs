@@ -14,7 +14,6 @@ namespace ClientNode {
     class ManagementCenterConnection {
         //do wczytania z config
         private readonly int centerPort = 8888;
-        private static bool connected = false;
         private static NetworkStream stream;
         private static StreamReader reader;
         private static StreamWriter writer;
@@ -29,9 +28,6 @@ namespace ClientNode {
                 reader = new StreamReader(stream);
                 writer = new StreamWriter(stream);
 
-                if (tcpClient.Connected) {
-                    connected = true;
-                }
                 GUIWindow.PrintLog("Connection with Management Center has been established");
 
                 GUIWindow.PrintLog("Sent registration request to Management Center");
@@ -44,9 +40,8 @@ namespace ClientNode {
 
                 //new Thread(ReceiveDataFromManagementCenter).Start();
 
-            } catch (SocketException se) {
+            } catch (SocketException) {
                 GUIWindow.PrintLog("Connection with Management Center has NOT been established");
-                connected = false;
             }
         }
 

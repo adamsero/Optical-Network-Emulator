@@ -14,7 +14,6 @@ namespace ControlCenter {
 
         private static GUIWindow instance;
         private readonly List<string> logBuffer1 = new List<string>();
-        private readonly List<string> logBuffer2 = new List<string>();
 
         public GUIWindow() {
             InitializeComponent();
@@ -65,85 +64,43 @@ namespace ControlCenter {
         }
 
         public static void PrintLog(String message) {
-            PrintLog(message, 1);
-            PrintLog(message, 2);
-        }
-
-        public static void PrintLog(String message, int whichAS) {
-
             if (instance.PauseLogsCheckBox.Checked) {
-                if(whichAS == 1)
                     instance.logBuffer1.Add(instance.TimeStamp() + message);
-                else
-                    instance.logBuffer2.Add(instance.TimeStamp() + message);
                 return;
             }
 
-            if (whichAS == 1) {
-                instance.LogBox1.Invoke((MethodInvoker)delegate {
-                    if (!instance.LogBox1.Text.Equals(""))
-                        instance.LogBox1.AppendText(Environment.NewLine);
-                    instance.LogBox1.AppendText(instance.TimeStamp() + message);
-                });
-            } else {
-                instance.LogBox2.Invoke((MethodInvoker)delegate {
-                    if (!instance.LogBox2.Text.Equals(""))
-                        instance.LogBox2.AppendText(Environment.NewLine);
-                    instance.LogBox2.AppendText(instance.TimeStamp() + message);
-                });
-            }
+            instance.LogBox1.Invoke((MethodInvoker)delegate {
+                if (!instance.LogBox1.Text.Equals(""))
+                    instance.LogBox1.AppendText(Environment.NewLine);
+                instance.LogBox1.AppendText(instance.TimeStamp() + message);
+            });
         }
 
-        public static void PrintLogNoTimeStamp(String message, int whichAS) {
+        public static void PrintLogNoTimeStamp(String message) {
 
             if (instance.PauseLogsCheckBox.Checked) {
-                if (whichAS == 1)
                     instance.logBuffer1.Add(instance.TimeStamp() + message);
-                else
-                    instance.logBuffer2.Add(instance.TimeStamp() + message);
                 return;
             }
 
-            if (whichAS == 1) {
-                instance.LogBox1.Invoke((MethodInvoker)delegate {
-                    if (!instance.LogBox1.Text.Equals(""))
-                        instance.LogBox1.AppendText(Environment.NewLine);
-                    instance.LogBox1.AppendText(message);
-                });
-            }
-            else {
-                instance.LogBox2.Invoke((MethodInvoker)delegate {
-                    if (!instance.LogBox2.Text.Equals(""))
-                        instance.LogBox2.AppendText(Environment.NewLine);
-                    instance.LogBox2.AppendText( message);
-                });
-            }
+            instance.LogBox1.Invoke((MethodInvoker)delegate {
+                if (!instance.LogBox1.Text.Equals(""))
+                    instance.LogBox1.AppendText(Environment.NewLine);
+                instance.LogBox1.AppendText(message);
+            });
         }
 
         private void ClearButton_Click(object sender, EventArgs e) {
             LogBox1.Text = "";
             logBuffer1.Clear();
-
-            LogBox2.Text = "";
-            logBuffer2.Clear();
         }
 
         private void PauseLogsCheckBox_CheckedChanged(object sender, EventArgs e) {
             if (!PauseLogsCheckBox.Checked) {
                 foreach (string log in logBuffer1)
-                    PrintLogNoTimeStamp(log, 1);
+                    PrintLogNoTimeStamp(log);
                 logBuffer1.Clear();
-
-                foreach (string log in logBuffer2)
-                    PrintLogNoTimeStamp(log, 2);
-                logBuffer2.Clear();
             }
-        }
-
-        private void SendRTButton_Click(object sender, EventArgs e) {
-            Server.SendRTs();
-            PrintLog("Sent out RTs");
-            //LinkedList<Path> paths = Algorithms.AllPaths(1, 3);
         }
 
         public static bool ShowKeepAlive() {
