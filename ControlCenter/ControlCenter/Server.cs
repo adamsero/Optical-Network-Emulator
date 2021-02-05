@@ -128,5 +128,14 @@ namespace ControlCenter {
         public static LinkedList<RouterConnection> GetRouterConnections() {
             return routerConnections;
         }
+
+        public static HostConnection GetHostConnectionByIP(String ip) {
+            foreach (HostConnection hc in hostConnections) {
+                if (hc.GetHost().getIP().Equals(ip)) {
+                    return hc; 
+                }
+            }
+            return null;
+        }
     }
 }
