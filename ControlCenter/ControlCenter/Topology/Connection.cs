@@ -41,5 +41,9 @@ namespace ControlCenter {
         public int[] GetSlot() {
             return slot;
         }
+
+        public int GetAsID() {
+            return asID;
+        }
     }
 }
