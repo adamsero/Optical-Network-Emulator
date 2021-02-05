@@ -10,12 +10,10 @@ namespace ClientNode {
 		public static int nodeID;
 		public static String ip;
 		public static int port;
-		private static int asID; 
-=======
 		private static int asID;
 		private static int routerID;
 		public static int ccPort;
->>>>>>> Stashed changes
+
 		public static readonly LinkedList<Tuple<int,String,int, int>> otherHosts = new LinkedList<Tuple<int, String, int, int>>();    //ID|IP|PORT
 		//public static readonly LinkedList<Tuple<int, String, int, int, int>> otherAvailableHosts = new LinkedList<Tuple<int, String, int, int,>>(); //ID|IP|PORT|LABEL
 

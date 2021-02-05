@@ -60,6 +60,27 @@ namespace ClientNode {
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL)");
                                 }
                                 break;
+
+                            case "CallAccept":
+                                GUIWindow.PrintLog("CPCC: Received CallAccept(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from NCC");
+
+                                string msg = "Incomming call received from " + data["routerX"] + "\nDo you want to accept it?";
+                                string caption = "Call incoming to " + data["routerY"];
+                                var dialogresult = MessageBox.Show(msg, caption,
+                                                             MessageBoxButtons.YesNo,
+                                                             MessageBoxIcon.Question);
+
+                                if(dialogresult == DialogResult.Yes) {
+
+                                    GUIWindow.ManageCallButton(false);
+                                    GUIWindow.ManageMessageBox(true);
+                                    GUIWindow.ManageSendButton(true);
+                                    SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], true);
+                                } else if(dialogresult == DialogResult.No) {
+                                    SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], false);
+                                } 
+
+                                break;
                         }
                         break;
 
@@ -87,6 +108,20 @@ namespace ClientNode {
             string message = "component:NCC;name:CallRequest;hostX:" + myHostName + ";hostY:" + targetHostName + ";speed:" + linkSpeed;
             SendMessage(message);
             GUIWindow.PrintLog("CPCC: Sent CallRequest(" + myHostName + ", " + targetHostName + ", " + linkSpeed + " Gb/s) to NCC");
+        }
+
+        public void SendCallAcceptResponse(String hostXName, String hostYName, String speed, bool response) {
+            String status;
+            if (response) {
+                status = "OK";
+            }
+            else {
+                status = "DENIED";
+            }
+
+            String message = "component:NCC;name:CallAcceptResponse;routerX:" + hostXName + ";routerY:" + hostYName + ";speed:" + speed + ";response:" + status;
+            SendMessage(message);
+            GUIWindow.PrintLog("NCC: Sent CallAcceptResponse(" + hostXName + ", " + hostYName + ", " + speed + " Gb/s) to NCC : " + status);
         }
 
         ////TODO: dodac ip w komunikatach przekazywanych do loga np. NCC CallRequest(10.0.0.1, 10.0.0.2)
