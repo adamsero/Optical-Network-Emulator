@@ -28,14 +28,13 @@ namespace ControlCenter {
 
                     Thread.Sleep(1000);
                     try {
-<<<<<<< Updated upstream
-=======
+
                         String config = String.Concat(File.ReadAllLines(args[1]));
                         ConfigLoader.loadConfig(config, args[2]);
 
                         //String config = String.Concat(File.ReadAllLines("./../../../../sharedResources/tsst_config.xml")); 
                         //ConfigLoader.loadConfig(config, "1");
->>>>>>> Stashed changes
+
 
                         //String config = String.Concat(File.ReadAllLines("./../../../../sharedResources/tsst_config.xml"));
                         //ConfigLoader.loadConfig(config);
