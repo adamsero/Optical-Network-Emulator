@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Call.cs" />
     <Compile Include="Components\CC.cs" />
+    <Compile Include="Components\LRM.cs" />
     <Compile Include="Components\RC.cs" />
     <Compile Include="InterCenterCommunication\ChildConnection.cs" />
     <Compile Include="InterCenterCommunication\ParentConnection.cs" />

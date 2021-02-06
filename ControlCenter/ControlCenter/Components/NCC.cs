@@ -15,6 +15,7 @@ namespace ControlCenter {
         private string lastRouterYIP;
         private int lastSpeed;
         private bool lastIDC;
+        public static Dictionary<int, Call> callRegister = new Dictionary<int, Call>();
 
         public NCC() {
             directory.Add("Host1", new Tuple<string, int>("10.0.1.1", 1));
@@ -103,6 +104,14 @@ namespace ControlCenter {
                         }
                         Program.peerConnection.SendMessage(message);
                         GUIWindow.PrintLog("NCC: Sent CallCoordinationResponse(" + status + ") to other NCC");
+                        break;
+                    
+                    case "CallTeardownCPCC":
+                        GUIWindow.PrintLog("NCC: Received CallTeardownCPCC(" + data["hostX"] + ", " + data["hostY"] + ", " + data["connectionID"] + ") from CPCC");
+
+                        GUIWindow.PrintLog("NCC: Sent ConnectionTeardown(" + data["connectionID"] + ") to CC");
+                        message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
+                        Program.cc.HandleRequest(Util.DecodeRequest(message));
                         break;
                 }
             } catch(Exception e) {

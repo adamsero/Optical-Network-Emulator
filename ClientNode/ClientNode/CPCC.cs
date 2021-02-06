@@ -16,6 +16,7 @@ namespace ClientNode {
         private static StreamReader reader;
         private static StreamWriter writer;
         public int connectionID = 0;
+        private String lastTargetHostName = null;
 
         public CPCC() {
             try {
@@ -60,6 +61,7 @@ namespace ClientNode {
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
                                 } else {
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
+                                    lastTargetHostName = null;
                                 }
                                 break;
 
@@ -107,6 +109,7 @@ namespace ClientNode {
         }
 
         public void SendCallRequest(String myHostName, String targetHostName, int linkSpeed) {
+            lastTargetHostName = targetHostName;
             string message = "component:NCC;name:CallRequest;hostX:" + myHostName + ";hostY:" + targetHostName + ";speed:" + linkSpeed;
             SendMessage(message);
             GUIWindow.PrintLog("CPCC: Sent CallRequest(" + myHostName + ", " + targetHostName + ", " + linkSpeed + " Gb/s) to NCC");
@@ -116,6 +119,12 @@ namespace ClientNode {
             string message = "component:NCC;name:CallAcceptResponse;routerX:" + hostXName + ";routerY:" + hostYName + ";speed:" + speed + ";succeeded:" + response.ToString();
             SendMessage(message);
             GUIWindow.PrintLog("NCC: Sent CallAcceptResponse(" + hostXName + ", " + hostYName + ", " + speed + " Gb/s) to NCC : " + (response ? "OK" : "DENIED"));
+        }
+
+        public void SendCallTeardownCPCC(String hostXName, String hostYName, int connectionID) {
+            string message = "component:NCC;name:CallTeardownCPCC;hostX:" + hostXName + ";hostY:" + hostYName + ";connectionID:" + connectionID;
+            SendMessage(message);
+            GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCC(" + hostXName + ", " + hostYName + ", " + connectionID + ") to NCC");
         }
 
         ////TODO: dodac ip w komunikatach przekazywanych do loga np. NCC CallRequest(10.0.0.1, 10.0.0.2)
