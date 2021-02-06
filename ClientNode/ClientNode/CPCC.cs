@@ -85,6 +85,13 @@ namespace ClientNode {
                                 } 
 
                                 break;
+
+                            case "CallTeardownCPCC":
+                                GUIWindow.PrintLog("CPCC: Received CallTeardownCPCC(" + data["conectionID"] + ") from NCC");
+                                GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCCResponse(" + data["conectionID"] + ") to NCC : OK");
+                                message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID + ";hostY:Host" + ConfigLoader.nodeID;
+                                SendMessage(message);
+                                break;
                         }
                         break;
 
@@ -124,7 +131,7 @@ namespace ClientNode {
         public void SendCallTeardownCPCC(String hostXName, String hostYName, int connectionID) {
             string message = "component:NCC;name:CallTeardownCPCC;hostX:" + hostXName + ";hostY:" + hostYName + ";connectionID:" + connectionID;
             SendMessage(message);
-            GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCC(" + hostXName + ", " + hostYName + ", " + connectionID + ") to NCC");
+            GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCC(" + connectionID + ") to NCC");
         }
 
         ////TODO: dodac ip w komunikatach przekazywanych do loga np. NCC CallRequest(10.0.0.1, 10.0.0.2)

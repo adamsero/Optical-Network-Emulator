@@ -26,13 +26,29 @@ namespace ControlCenter {
                     int asID = element.GetStartAsID();
 
                     if (!interDomainConnectionFlag && asID == ConfigLoader.ccID) {
-                        //do External LRM
+                        GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
+                        message = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
+                        Program.lrm.HandleRequest(Util.DecodeRequest(message));
                     }
-                    else { 
-                        //do Local LRM
+                    else {
+                        GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                        message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                        Program.lrm.HandleRequest(Util.DecodeRequest(message));
                     }
+                    break;
 
-                    //string message = "component:RC;name:RouteTableQuery;routerX:" + data["routerX"] + ";routerY:" + data["routerY"] + ";speed:" + data["speed"] + ";IDC:" + data["IDC"] + ";case:" + networkCase;
+                case "LinkConnectionExternalDeallocationResponse":
+                    GUIWindow.PrintLog("CC: Received LinkConnectionExternalDeallocation(" + data["connectionID"] + ") from External LRM : OK");
+                    GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                    message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                    Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                    break;
+
+                case "LinkConnectionInternalDeallocationResponse":
+                    GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from Internal LRM : OK");
+                    GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");
+                    message = "component:NCC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
+                    Program.ncc.HandleRequest(Util.DecodeRequest(message),null);
                     break;
             }
         }
