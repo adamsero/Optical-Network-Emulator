@@ -29,6 +29,15 @@ namespace ControlCenter {
             }
 
             new Thread(RecieveMessages).Start();
+            //try {
+            //    new Thread(() => {
+            //        Thread.Sleep(100);
+            //        Program.rc.SendNetworkTopology();
+            //    }).Start();
+            //} catch(Exception e) {
+            //    GUIWindow.PrintLog(e.Message);
+            //    GUIWindow.PrintLog(e.StackTrace);
+            //}
         }
 
         private void Register() {
@@ -44,16 +53,15 @@ namespace ControlCenter {
 
             while (true) {
                 string message = reader.ReadLine();
-                string[] pieces = message.Split(';');
-                Dictionary<string, string> data = new Dictionary<string, string>();
-                foreach (string piece in pieces) {
-                    string[] keyAndValue = piece.Split(':');
-                    data.Add(keyAndValue[0], keyAndValue[1]);
-                }
+                Dictionary<string, string> data = Util.DecodeRequest(message);
 
                 switch (data["component"]) {
                     case "NCC":
                         ncc.HandleRequest(data, null);
+                        break;
+
+                    case "RC":
+                        Program.rc.HandleRequest(data);
                         break;
                 }
             }

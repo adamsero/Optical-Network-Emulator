@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\CC.cs" />
+    <Compile Include="Components\RC.cs" />
     <Compile Include="InterCenterCommunication\ChildConnection.cs" />
     <Compile Include="InterCenterCommunication\ParentConnection.cs" />
     <Compile Include="Topology\Algorithms.cs" />
@@ -70,6 +71,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util.cs" />
     <EmbeddedResource Include="GUIWindow.resx">
       <DependentUpon>GUIWindow.cs</DependentUpon>
     </EmbeddedResource>

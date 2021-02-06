@@ -7,52 +7,32 @@ using System.Threading.Tasks;
 namespace ControlCenter {
     class Algorithms {
 
-        public static List<Path> AllPaths(Host sender, Host receiver) {
+        public static List<Path> AllPaths(Node staring, Node ending) {
 
-            if(sender == null || receiver == null) {
-                GUIWindow.PrintLog("One or both host IDs do not exist!");
+            if(staring == null || ending == null) {
+                GUIWindow.PrintLog("One or both host Nodes do not exist!");
                 return null;
             }
 
-            Graph graph = new Graph(ConfigLoader.routers.Count + 1);
-            Router initialRouter = null;
-            Router finalRouter = null;
+            Graph graph = new Graph(ConfigLoader.routers.Count + ConfigLoader.hosts.Count + 1);
 
-            foreach(Connection edge in ConfigLoader.connections.Values) {
+            foreach(Connection edge in ConfigLoader.myConnections.Values) {
                 Node n1 = edge.endPoints.Item1;
                 Node n2 = edge.endPoints.Item2;
                 if (!n1.working || !n2.working)
                     continue;
 
-                if(n1 is Router && n2 is Router) {
-                    graph.addEdge(n1.GetRouterID(), n2.GetRouterID());
-                    graph.addEdge(n2.GetRouterID(), n1.GetRouterID());
-                } else if(n1 is Router && n2 is Host) {
-                    if ((Host)n2 == sender)
-                        initialRouter = (Router)n1;
-                    else if ((Host)n2 == receiver)
-                        finalRouter = (Router)n1;
-                } else if(n1 is Host && n2 is Router) {
-                    if ((Host)n1 == sender)
-                        initialRouter = (Router)n2;
-                    else if ((Host)n1 == receiver)
-                        finalRouter = (Router)n2;
-                }
-            }
-
-            if(initialRouter == null || finalRouter == null) {
-                GUIWindow.PrintLog("Could not calculate shortest paths (either the IDs are incorrect or graph was incorrectly configured)!");
-                return null;
+                graph.addEdge(n1.GetAlgorithmID(), n2.GetAlgorithmID());
+                graph.addEdge(n2.GetAlgorithmID(), n1.GetAlgorithmID());
             }
 
             //Console.WriteLine("Paths between " + initialRouter.GetRouterID() + " and " + finalRouter.GetRouterID());
-            graph.printAllPaths(initialRouter.GetRouterID(), finalRouter.GetRouterID());
+            graph.printAllPaths(staring.GetAlgorithmID(), ending.GetAlgorithmID());
             List<List<int>> allPathsNodes = graph.allPaths;
 
             List<Path> allPaths = new List<Path>();
-  
             foreach (List<int> path in allPathsNodes) {
-                allPaths.Add(new Path(path, sender, receiver));
+                allPaths.Add(new Path(path));
             }
 
             allPaths.Sort();

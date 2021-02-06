@@ -34,6 +34,13 @@ namespace ControlCenter {
             return id;
         }
 
+        public int GetAlgorithmID() {
+            if (this is Host)
+                return id + 10;
+            else
+                return id;
+        }
+
         public String getIP() {
             return ip;
         }

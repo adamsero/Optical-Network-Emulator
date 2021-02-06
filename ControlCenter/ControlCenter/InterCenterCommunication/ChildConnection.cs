@@ -41,14 +41,12 @@ namespace ControlCenter {
 
             while (true) {
                 string message = reader.ReadLine();
-                string[] pieces = message.Split(';');
-                Dictionary<string, string> data = new Dictionary<string, string>();
-                foreach (string piece in pieces) {
-                    string[] keyAndValue = piece.Split(':');
-                    data.Add(keyAndValue[0], keyAndValue[1]);
-                }
+                Dictionary<string, string> data = Util.DecodeRequest(message);
 
                 switch (data["component"]) {
+                    case "RC":
+                        Program.rc.HandleRequest(data);
+                        break;
                 }
             }
         }

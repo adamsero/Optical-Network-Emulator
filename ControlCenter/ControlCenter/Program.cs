@@ -18,8 +18,10 @@ namespace ControlCenter {
         public static InterCcCommunicationServer interCCServer;
         public static PeerConnection peerConnection;
         public static ChildConnection childConnection;
+        public static ParentConnection parentConnection;
 
         public static CC cc = new CC();
+        public static RC rc = new RC();
 
         [STAThread]
         static void Main(String[] args) {

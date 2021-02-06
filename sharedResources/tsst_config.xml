@@ -162,7 +162,7 @@
 				<endpoint type="router" id="10" port="300"></endpoint>
 			</connection>
 			
-			<connection id="9" type="router-router" distance="20" max-bandwidth="150" external="false" as-id="2">
+			<connection id="9" type="router-router" distance="40" max-bandwidth="150" external="false" as-id="2">
 				<endpoint type="router" id="4" port="200"></endpoint>
 				<endpoint type="router" id="5" port="200"></endpoint>
 			</connection>

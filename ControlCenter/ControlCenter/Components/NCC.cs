@@ -7,23 +7,24 @@ using System.Threading.Tasks;
 namespace ControlCenter {
     class NCC {
 
-        private Dictionary<string, string> directory = new Dictionary<string, string>();
+        private Dictionary<string, Tuple<string, int>> directory = new Dictionary<string, Tuple<string, int>>();
 
         //cached data
         private HostConnection lastCaller;
         private string lastRouterXIP;
         private string lastRouterYIP;
         private int lastSpeed;
+        private bool lastIDC;
 
         public NCC() {
-            directory.Add("Host1", "10.0.1.1");
-            directory.Add("Host2", "10.0.2.1");
-            directory.Add("Host3", "10.0.5.1");
-            directory.Add("Host4", "10.0.4.1");
-            directory.Add("10.0.1.1", "Host1");
-            directory.Add("10.0.2.1", "Host2");
-            directory.Add("10.0.5.1", "Host3");
-            directory.Add("10.0.4.1", "Host4");
+            directory.Add("Host1", new Tuple<string, int>("10.0.1.1", 1));
+            directory.Add("Host2", new Tuple<string, int>("10.0.2.1", 1));
+            directory.Add("Host3", new Tuple<string, int>("10.0.5.1", 2));
+            directory.Add("Host4", new Tuple<string, int>("10.0.4.1", 2));
+            directory.Add("10.0.1.1", new Tuple<string, int>("Host1", 1));
+            directory.Add("10.0.2.1", new Tuple<string, int>("Host2", 1));
+            directory.Add("10.0.5.1", new Tuple<string, int>("Host3", 2));
+            directory.Add("10.0.4.1", new Tuple<string, int>("Host4", 2));
         }
 
         public void HandleRequest(Dictionary<string, string> data, HostConnection caller) {
@@ -32,29 +33,35 @@ namespace ControlCenter {
                     case "CallRequest":
                         GUIWindow.PrintLog("NCC: Received CallRequest(" + data["hostX"] + ", " + data["hostY"] + ", " + data["speed"] + " Gb/s) from CPCC");
 
-                        Tuple<string, string> routerIPs = HandleDirectory(data["hostX"], data["hostY"]);
-                        if (routerIPs.Item1.Equals("WRONG NAME") || routerIPs.Item2.Equals("WRONG NAME")) {
+                        Tuple<string, string, int, int> routerData = HandleDirectory(data["hostX"], data["hostY"]);
+                        if (routerData.Item1.Equals("WRONG NAME") || routerData.Item2.Equals("WRONG NAME")) {
                             GUIWindow.PrintLog("NCC: Host name does not exist");
                             GUIWindow.PrintLog("NCC: Sent CallRequestResponse(UNSUCCESSFUL)");
                             RefuseConnection(caller);
-                            return;
+                            break;
                         }
-                        else if (routerIPs.Item1.Equals(routerIPs.Item2)) {
+                        else if (routerData.Item1.Equals(routerData.Item2)) {
                             GUIWindow.PrintLog("NCC: Target Host name is the same as the source one");
                             GUIWindow.PrintLog("NCC: Sent CallRequestResponse(UNUSCCESSFUL)");
                             RefuseConnection(caller);
-                            return;
+                            break;
                         }
                         HandlePolicy();
 
                         lastCaller = caller;
-                        lastRouterXIP = routerIPs.Item1;
-                        lastRouterYIP = routerIPs.Item2; ;
+                        lastRouterXIP = routerData.Item1;
+                        lastRouterYIP = routerData.Item2; ;
                         lastSpeed = Convert.ToInt32(data["speed"]);
+                        lastIDC = routerData.Item3 == routerData.Item4;
 
-                        string message = "component:NCC;name:CallCoordination;routerX:" + routerIPs.Item1 + ";routerY:" + routerIPs.Item2 + ";speed:" + data["speed"];
+                        if (lastIDC) {
+                            ConnectionRequest(false);
+                            break;
+                        }
+
+                        string message = "component:NCC;name:CallCoordination;routerX:" + routerData.Item1 + ";routerY:" + routerData.Item2 + ";speed:" + data["speed"];
                         Program.peerConnection.SendMessage(message);
-                        GUIWindow.PrintLog("NCC: Sent CallCoordination(" + routerIPs.Item1 + ", " + routerIPs.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
+                        GUIWindow.PrintLog("NCC: Sent CallCoordination(" + routerData.Item1 + ", " + routerData.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
 
                         break;
 
@@ -63,13 +70,13 @@ namespace ControlCenter {
                         GUIWindow.PrintLog("NCC: Received CallCoordination(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from other NCC");
 
                         //odwrotne dzialanie funkcji -- dajemy IP dostajemy nazwy
-                        routerIPs = HandleDirectory(data["routerX"], data["routerY"]);
+                        routerData = HandleDirectory(data["routerX"], data["routerY"]);
                         HandlePolicy();
                         string hostYIP = data["routerY"].Remove(data["routerY"].Length - 1, 1) + "2";
                         HostConnection hostConnection = Server.GetHostConnectionByIP(hostYIP);
-                        message = "component:CPCC;name:CallAccept;routerX:" + routerIPs.Item1 + ";routerY:" + routerIPs.Item2 + ";speed:" + data["speed"];
+                        message = "component:CPCC;name:CallAccept;routerX:" + routerData.Item1 + ";routerY:" + routerData.Item2 + ";speed:" + data["speed"];
                         hostConnection.SendMessage(message);
-                        GUIWindow.PrintLog("NCC: Sent CallAccept(" + routerIPs.Item1 + ", " + routerIPs.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
+                        GUIWindow.PrintLog("NCC: Sent CallAccept(" + routerData.Item1 + ", " + routerData.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
                         break;
 
                     case "CallCoordinationResponse":
@@ -79,8 +86,7 @@ namespace ControlCenter {
                         }
                         else {
                             GUIWindow.PrintLog("NCC: Received CallRequestResponse(ACCEPTED) from other NCC");
-                            GUIWindow.PrintLog("NCC: Sent ConnectionRequest(" + lastRouterXIP + ", " + lastRouterYIP + ", " + lastSpeed + " Gb/s) to CC");
-                            Program.cc.ConnectionRequest(lastRouterXIP, lastRouterYIP, lastSpeed);
+                            ConnectionRequest(true);
                             //message = "component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:0"; //hard-kodowane connID na razie
                             //lastCaller.SendMessage(message);
                         }
@@ -95,7 +101,7 @@ namespace ControlCenter {
                         else {
                             message = "component:NCC;name:CallCoordinationResponse;succeeded:true";
                         }
-                        Program.interCCServer.peerConnection.SendMessage(message);
+                        Program.peerConnection.SendMessage(message);
                         GUIWindow.PrintLog("NCC: Sent CallCoordinationResponse(" + status + ") to other NCC");
                         break;
                 }
@@ -105,30 +111,43 @@ namespace ControlCenter {
             }
         }
 
+        private void ConnectionRequest(bool interDomainConnection) {
+            GUIWindow.PrintLog("NCC: Sent ConnectionRequest(" + lastRouterXIP + ", " + lastRouterYIP + ", " + lastSpeed + " Gb/s, InterDomainConnection: " + interDomainConnection + ") to CC");
+            string message = "name:ConnectionRequest;routerX:" + lastRouterXIP + ";routerY:" + lastRouterYIP + ";speed:" + lastSpeed + ";IDC:" + interDomainConnection.ToString();
+            Program.cc.HandleRequest(Util.DecodeRequest(message));
+        }
+
         private void HandlePolicy() {
             GUIWindow.PrintLog("NCC: Sent Policy() to CAC");
             GUIWindow.PrintLog("NCC: Received PolicyResponse(OK)");
         }
 
-        private Tuple<string, string> HandleDirectory(string hostX, string hostY) {
+        private Tuple<string, string, int, int> HandleDirectory(string hostX, string hostY) {
             GUIWindow.PrintLog("NCC: Sent DirectoryRequest(" + hostX + ") to Directory");
             string routerXIP;
+            int routerXAsId = 0;
             try {
-                routerXIP = directory[hostX];
+                Tuple<string, int> info = directory[hostX];
+                routerXIP = info.Item1;
+                routerXAsId = info.Item2;
             } catch(Exception) {
                 routerXIP = "WRONG NAME";
             }
-            GUIWindow.PrintLog("NCC: Received DirectoryRequestResponse(" + routerXIP + ") from Directory");
+            GUIWindow.PrintLog("NCC: Received DirectoryRequestResponse(" + routerXIP + ", "+ routerXAsId + ") from Directory");
             GUIWindow.PrintLog("NCC: Sent DirectoryRequest(" + hostY + ") to Directory");
+
             string routerYIP;
+            int routerYAsId = 0;
             try {
-                routerYIP = directory[hostY];
+                Tuple<string, int> info = directory[hostY];
+                routerYIP = info.Item1;
+                routerYAsId = info.Item2;
             } catch (Exception) {
                 routerYIP = "WRONG NAME";
             }
-            GUIWindow.PrintLog("NCC: Received DirectoryRequestResponse(" + routerYIP + ") from Directory");
+            GUIWindow.PrintLog("NCC: Received DirectoryRequestResponse(" + routerYIP + ", " + routerYAsId + ") from Directory");
 
-            return new Tuple<string, string>(routerXIP, routerYIP);
+            return new Tuple<string, string, int, int>(routerXIP, routerYIP, routerXAsId, routerYAsId);
         }
 
         private void RefuseConnection(HostConnection caller) {
