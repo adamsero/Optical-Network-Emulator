@@ -10,11 +10,11 @@ namespace ControlCenter {
         private Dictionary<string, Tuple<string, int>> directory = new Dictionary<string, Tuple<string, int>>();
 
         //cached data
-        private HostConnection lastCaller;
-        private string lastRouterXIP;
-        private string lastRouterYIP;
-        private int lastSpeed;
-        private bool lastIDC;
+        public HostConnection lastCaller;
+        public string lastRouterXIP;
+        public string lastRouterYIP;
+        public int lastSpeed;
+        public bool lastIDC;
 
         public NCC() {
             directory.Add("Host1", new Tuple<string, int>("10.0.1.1", 1));
@@ -52,14 +52,18 @@ namespace ControlCenter {
                         lastRouterXIP = routerData.Item1;
                         lastRouterYIP = routerData.Item2; ;
                         lastSpeed = Convert.ToInt32(data["speed"]);
-                        lastIDC = routerData.Item3 == routerData.Item4;
+                        lastIDC = routerData.Item3 != routerData.Item4;
 
-                        if (lastIDC) {
-                            ConnectionRequest(false);
+                        if (!lastIDC) {
+                            string hostYIP1 = routerData.Item2.Remove(routerData.Item2.Length - 1, 1) + "2";
+                            HostConnection hostConnection1 = Server.GetHostConnectionByIP(hostYIP1);
+                            string message1 = "component:CPCC;name:CallAccept;routerX:" + data["hostX"] + ";routerY:" + data["hostY"] + ";speed:" + data["speed"];
+                            hostConnection1.SendMessage(message1);
+                            GUIWindow.PrintLog("NCC: Sent CallAccept(" + data["hostX"] + ", " + data["hostY"] + ", " + data["speed"] + " Gb/s) to other NCC");
                             break;
                         }
 
-                        string message = "component:NCC;name:CallCoordination;routerX:" + routerData.Item1 + ";routerY:" + routerData.Item2 + ";speed:" + data["speed"];
+                        string message = "component:NCC;name:CallCoordination;routerX:" + routerData.Item1 + ";routerY:" + routerData.Item2 + ";speed:" + data["speed"] + ";IDC:" + lastIDC.ToString();
                         Program.peerConnection.SendMessage(message);
                         GUIWindow.PrintLog("NCC: Sent CallCoordination(" + routerData.Item1 + ", " + routerData.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
 
@@ -68,6 +72,7 @@ namespace ControlCenter {
                     case "CallCoordination":
 
                         GUIWindow.PrintLog("NCC: Received CallCoordination(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from other NCC");
+                        lastIDC = Convert.ToBoolean(data["IDC"]);
 
                         //odwrotne dzialanie funkcji -- dajemy IP dostajemy nazwy
                         routerData = HandleDirectory(data["routerX"], data["routerY"]);
@@ -86,7 +91,7 @@ namespace ControlCenter {
                         }
                         else {
                             GUIWindow.PrintLog("NCC: Received CallRequestResponse(ACCEPTED) from other NCC");
-                            ConnectionRequest(true);
+                            ConnectionRequest(lastIDC);
                             //message = "component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:0"; //hard-kodowane connID na razie
                             //lastCaller.SendMessage(message);
                         }
@@ -94,15 +99,25 @@ namespace ControlCenter {
 
                     case "CallAcceptResponse":
                         string status = "ACCEPTED";
-                        if (!Convert.ToBoolean(data["succeeded"])) {
-                            message = "component:NCC;name:CallCoordinationResponse;succeeded:false";
-                            status = "DENIED";
+                        if(lastIDC) {
+                            if (!Convert.ToBoolean(data["succeeded"])) {
+                                message = "component:NCC;name:CallCoordinationResponse;succeeded:false";
+                                status = "DENIED";
+                            }
+                            else {
+                                message = "component:NCC;name:CallCoordinationResponse;succeeded:true";
+                            }
+                            Program.peerConnection.SendMessage(message);
+                            GUIWindow.PrintLog("NCC: Sent CallCoordinationResponse(" + status + ") to other NCC");
+                        } else {
+                            if (!Convert.ToBoolean(data["succeeded"])) {
+                                GUIWindow.PrintLog("NCC: Received CallAcceptResponse(DENIED) from CPCC");
+                                RefuseConnection(lastCaller);
+                            } else {
+                                GUIWindow.PrintLog("NCC: Received CallAcceptResponse(ACCEPTED) from CPCC");
+                                ConnectionRequest(lastIDC);
+                            }
                         }
-                        else {
-                            message = "component:NCC;name:CallCoordinationResponse;succeeded:true";
-                        }
-                        Program.peerConnection.SendMessage(message);
-                        GUIWindow.PrintLog("NCC: Sent CallCoordinationResponse(" + status + ") to other NCC");
                         break;
                 }
             } catch(Exception e) {

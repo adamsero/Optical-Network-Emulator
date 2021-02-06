@@ -19,25 +19,60 @@ namespace ControlCenter {
                                 GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
                                 Program.parentConnection.SendMessage(message1);
                             } else {
-                                //tutaj NetworkTopologyResponse
+                                //tutaj NetworkTopologyResponse do peera
+                                SendPeerNetworkTopologyResponse("Routers = ", " Connections = ");
                             }
                             break;
 
                         case "child":
                             GUIWindow.PrintLog("RC: Received NetworkTopology() from parent RC");
-                            //NetworkTopologyResponse do parenta
+                            string routersList = "Routers = ";
+                            foreach (Router router in ConfigLoader.myRouters)
+                                routersList += router.GetRouterID() + ", ";
+                            routersList = routersList.Remove(routersList.Length - 2, 2);
+
+                            string linksList = " Connections = ";
+                            foreach (Connection connection in ConfigLoader.myConnections.Values)
+                                linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
+                            linksList = linksList.Remove(linksList.Length - 2, 2);
+
+                            GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + linksList + ") to parent RC");
+                            message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList;
+                            Program.childConnection.SendMessage(message1);
                             break;
                     }
 
                     break;
 
+                case "NetworkTopologyResponse":
+                    switch (data["receiver"]) {
+                        case "parent":
+                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["linksList"] + ") from child RC");
+                            if (Program.ncc.lastIDC) {
+                                //tutaj NetworkTopologyResponse do peera
+                                SendPeerNetworkTopologyResponse(data["routersList"] + ", ", data["linksList"] + ", ");
+                            } else {
+                                //polaczenie lokalne w ASie 2gim
+                            }
+                            break;
+
+                        case "peer":
+                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
+                            break;
+                    }
+                    break;
+
                 case "RouteTableQuery":
                     GUIWindow.PrintLog("RC: Received RouteTableQuery(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s, InterDomainConnection: " + data["IDC"] + ") from CC");
 
-                    if (!Convert.ToBoolean(data["IDC"])) {
+                    if (Convert.ToBoolean(data["IDC"])) {
                         string message = "component:RC;name:NetworkTopology;receiver:peer";
                         GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
                         Program.peerConnection.SendMessage(message);
+                    } else if(ConfigLoader.ccID == 2) {
+                        string message = "component:RC;name:NetworkTopology;receiver:child";
+                        GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
+                        Program.parentConnection.SendMessage(message);
                     }
 
                     //string startingNode, endingNode;
@@ -67,6 +102,25 @@ namespace ControlCenter {
 
                     break;
             }
+        }
+
+        private void SendPeerNetworkTopologyResponse(string routersList, string linksList) {
+            string hostList = " Hosts = ";
+            foreach (Host host in ConfigLoader.myHosts)
+                hostList += host.GetHostID() + ", ";
+            hostList = hostList.Remove(hostList.Length - 2, 2);
+
+            foreach (Router router in ConfigLoader.myRouters)
+                routersList += router.GetRouterID() + ", ";
+            routersList = routersList.Remove(routersList.Length - 2, 2);
+
+            foreach (Connection connection in ConfigLoader.myConnections.Values)
+                linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
+            linksList = linksList.Remove(linksList.Length - 2, 2);
+
+            GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + hostList + linksList + ") to peer RC");
+            string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList;
+            Program.peerConnection.SendMessage(message);
         }
 
     }

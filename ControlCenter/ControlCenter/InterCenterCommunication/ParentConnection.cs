@@ -45,6 +45,9 @@ namespace ControlCenter {
                 }
 
                 switch (data["component"]) {
+                    case "RC":
+                        Program.rc.HandleRequest(data);
+                        break;
                 }
 
             }
