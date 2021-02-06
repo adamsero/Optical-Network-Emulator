@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\CC.cs" />
     <Compile Include="InterCenterCommunication\ChildConnection.cs" />
     <Compile Include="InterCenterCommunication\ParentConnection.cs" />
     <Compile Include="Topology\Algorithms.cs" />

@@ -56,8 +56,10 @@ namespace ClientNode {
                             case "CallRequestResponse":
                                 if(Convert.ToBoolean(data["succeeded"])) {
                                     //zapisujemy ID i pozwalamy wysylac wiadomosci
+                                    GUIWindow.UnlockSendingMessages();
+                                    GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
                                 } else {
-                                    GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL)");
+                                    GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
                                 }
                                 break;
 
@@ -111,17 +113,9 @@ namespace ClientNode {
         }
 
         public void SendCallAcceptResponse(String hostXName, String hostYName, String speed, bool response) {
-            String status;
-            if (response) {
-                status = "OK";
-            }
-            else {
-                status = "DENIED";
-            }
-
-            String message = "component:NCC;name:CallAcceptResponse;routerX:" + hostXName + ";routerY:" + hostYName + ";speed:" + speed + ";response:" + status;
+            string message = "component:NCC;name:CallAcceptResponse;routerX:" + hostXName + ";routerY:" + hostYName + ";speed:" + speed + ";succeeded:" + response.ToString();
             SendMessage(message);
-            GUIWindow.PrintLog("NCC: Sent CallAcceptResponse(" + hostXName + ", " + hostYName + ", " + speed + " Gb/s) to NCC : " + status);
+            GUIWindow.PrintLog("NCC: Sent CallAcceptResponse(" + hostXName + ", " + hostYName + ", " + speed + " Gb/s) to NCC : " + (response ? "OK" : "DENIED"));
         }
 
         ////TODO: dodac ip w komunikatach przekazywanych do loga np. NCC CallRequest(10.0.0.1, 10.0.0.2)

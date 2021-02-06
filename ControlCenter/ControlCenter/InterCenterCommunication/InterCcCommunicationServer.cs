@@ -17,8 +17,8 @@ namespace ControlCenter {
         private readonly IPAddress ipAddress;
         private readonly NCC ncc;
 
-        private PeerConnection peerConnection;
-        private ParentConnection parentConnection;
+        public PeerConnection peerConnection;
+        public ParentConnection parentConnection;
 
         public InterCcCommunicationServer(NCC ncc) {
             this.ncc = ncc;

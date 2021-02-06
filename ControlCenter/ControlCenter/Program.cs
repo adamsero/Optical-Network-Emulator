@@ -19,6 +19,8 @@ namespace ControlCenter {
         public static PeerConnection peerConnection;
         public static ChildConnection childConnection;
 
+        public static CC cc = new CC();
+
         [STAThread]
         static void Main(String[] args) {
             try {
