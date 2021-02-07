@@ -10,11 +10,12 @@ namespace ControlCenter {
         private Dictionary<string, Tuple<string, int>> directory = new Dictionary<string, Tuple<string, int>>();
 
         //cached data
-        public HostConnection lastCaller;
-        public string lastRouterXIP;
-        public string lastRouterYIP;
-        public int lastSpeed;
-        public bool lastIDC;
+        private HostConnection lastCaller;
+        private string lastRouterXIP;
+        private string lastRouterYIP;
+        private int lastSpeed;
+        private bool lastIDC;
+        public static Dictionary<int, Call> callRegister = new Dictionary<int, Call>();
 
         public NCC() {
             directory.Add("Host1", new Tuple<string, int>("10.0.1.1", 1));
@@ -118,6 +119,72 @@ namespace ControlCenter {
                                 ConnectionRequest(lastIDC);
                             }
                         }
+                        break;
+                    
+                    case "CallTeardownCPCC":
+                        GUIWindow.PrintLog("NCC: Received CallTeardownCPCC(" + data["connectionID"] + ") from CPCC");
+
+                        GUIWindow.PrintLog("NCC: Sent ConnectionTeardown(" + data["connectionID"] + ") to CC");
+                        message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
+                        Program.cc.HandleRequest(Util.DecodeRequest(message));
+                        break;
+
+                    case "ConnectionTeardownResponse":
+                        GUIWindow.PrintLog("NCC: Received ConnectionTeardownResponse(" + data["connectionID"] + ") from CC : OK");
+                        
+                        if (callRegister[Int32.Parse(data["connectionID"])].GetStartAsID() == ConfigLoader.ccID) {
+                            // Pierwszy AS
+                            if (callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
+                                //polaczenie wewnatrzdomenowe
+                                GUIWindow.PrintLog("NCC: Sent CallTeardownCPCC(" + data["connectionID"] + ") to CPCC");
+                                message = "component:CPCC;name:CallTeardownCPCC;connectionID:" + data["connectionID"];
+                                callRegister[Int32.Parse(data["connectionID"])].GetTargetHostConnection().SendMessage(message);
+                                break;
+                            }
+                            else {
+                                //polaczenie zewnatrzdomenowe
+                                GUIWindow.PrintLog("NCC: Sent CallTeardownNCC(" + data["connectionID"] + ") to other AS NCC");
+                                message = "component:NCC;name:CallTeardownNCC;connectionID:" + data["connectionID"];
+                                Program.peerConnection.SendMessage(message);
+                            }
+                        }
+                        else {
+                            // Drugi AS
+                            GUIWindow.PrintLog("NCC: Sent CallTeardownNCCResponse(" + data["connectionID"] + ") to other AS NCC : OK");
+                            message = "component:NCC;name:CallTeardownNCCResponse;connectionID:" + data["connectionID"];
+                            Program.peerConnection.SendMessage(message);
+                        }
+                        break;
+
+                    case "CallTeardownNCC":
+                        GUIWindow.PrintLog("NCC: Received CallTeardownNCC(" + data["connectionID"] + ") from other AS NCC");
+
+                        GUIWindow.PrintLog("NCC: Sent CallTeardownCPCC(" + data["connectionID"] + ") to CPCC");
+                        message = "component:CPCC;name:CallTeardownCPCC;connectionID:" + data["connectionID"];
+                        callRegister[Int32.Parse(data["connectionID"])].GetTargetHostConnection().SendMessage(message);
+                        break;
+
+                    case "CallTeardownCPCCResponse":
+                        GUIWindow.PrintLog("NCC: Received CallTeardownCPCCResponse(" + data["connectionID"] + ") from CPCC: OK");
+                        if (callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
+                            //polaczenie wewnatrzdomenowe
+                            GUIWindow.PrintLog("NCC: Sent CallTeardownCPCCResponse(" + data["connectionID"] + ") to CPCC : OK");
+                            message = "component:CPCC;name:CallTeardownCPCCResponse;connectionID:" + data["connectionID"];
+                            callRegister[Int32.Parse(data["connectionID"])].GetStartHostConnection().SendMessage(message);
+                        }
+                        else {
+                            //polaczenie zewnatrzdomenowe
+                            GUIWindow.PrintLog("NCC: Sent ConnectionTeardown(" + data["connectionID"] + ") to CC");
+                            message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
+                            Program.cc.HandleRequest(Util.DecodeRequest(message));
+                        }
+                        break;
+
+                    case "CallTeardownNCCResponse":
+                        GUIWindow.PrintLog("NCC: Received CallTeardownNCCResponse(" + data["connectionID"] + ") from other AS NCC : OK");
+                        GUIWindow.PrintLog("NCC: Sent CallTeardownCPCCResponse(" + data["connectionID"] + ") to CPCC : OK");
+                        message = "component:CPCC;name:CallTeardownCPCCResponse;connectionID:" + data["connectionID"];
+                        callRegister[Int32.Parse(data["connectionID"])].GetStartHostConnection().SendMessage(message);
                         break;
                 }
             } catch(Exception e) {

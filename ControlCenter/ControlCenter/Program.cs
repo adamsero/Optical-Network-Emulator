@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
+using ControlCenter.Components;
 
 namespace ControlCenter {
     static class Program {
@@ -22,6 +23,7 @@ namespace ControlCenter {
 
         public static CC cc = new CC();
         public static RC rc = new RC();
+        public static LRM lrm = new LRM();
         public static NCC ncc;
 
         [STAThread]

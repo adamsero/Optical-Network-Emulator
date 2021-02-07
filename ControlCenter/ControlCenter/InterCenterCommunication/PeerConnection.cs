@@ -63,6 +63,10 @@ namespace ControlCenter {
                     case "RC":
                         Program.rc.HandleRequest(data);
                         break;
+                    
+                    case "LRM":
+                        Program.lrm.HandleRequest(data);
+                        break;
                 }
             }
         }
