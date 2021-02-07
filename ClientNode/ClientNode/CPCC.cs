@@ -89,7 +89,7 @@ namespace ClientNode {
                             case "CallTeardownCPCC":
                                 GUIWindow.PrintLog("CPCC: Received CallTeardownCPCC(" + data["conectionID"] + ") from NCC");
                                 GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCCResponse(" + data["conectionID"] + ") to NCC : OK");
-                                message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID + ";hostY:Host" + ConfigLoader.nodeID;
+                                message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID;
                                 SendMessage(message);
                                 break;
                         }
