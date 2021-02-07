@@ -8,6 +8,7 @@ namespace ControlCenter {
     class RC {
 
         private readonly Dictionary<string, string> cachedData = new Dictionary<string, string>();
+        private Dictionary<int, int[]> cachedChannels = new Dictionary<int, int[]>();
 
         public void HandleRequest(Dictionary<string, string> data) {
             switch(data["name"]) {
@@ -34,12 +35,16 @@ namespace ControlCenter {
                                 routersList2 = routersList2.Remove(routersList2.Length - 2, 2);
 
                                 string linksList2 = " Links = ";
-                                foreach (Connection connection in ConfigLoader.myConnections.Values)
+                                string channelList2 = "";
+                                foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList2 += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
+                                    channelList2 += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                                }                                    
                                 linksList2 = linksList2.Remove(linksList2.Length - 2, 2);
+                                channelList2 = channelList2.Remove(channelList2.Length - 1, 1);
 
                                 GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
-                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"];
+                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2;
                                 Program.peerConnection.SendMessage(message);
                             }
                             break;
@@ -53,12 +58,16 @@ namespace ControlCenter {
                             routersList = routersList.Remove(routersList.Length - 2, 2);
 
                             string linksList = " Connections = ";
-                            foreach (Connection connection in ConfigLoader.myConnections.Values)
+                            string channelList = "";
+                            foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                 linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
+                                channelList += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                            }
                             linksList = linksList.Remove(linksList.Length - 2, 2);
+                            channelList = channelList.Remove(channelList.Length - 1, 1);
 
                             GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + linksList + ") to parent RC");
-                            string message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList + ";scenario:" + data["scenario"];
+                            string message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
                             Program.childConnection.SendMessage(message1);
                             break;
                     }
@@ -82,21 +91,30 @@ namespace ControlCenter {
                                 routersList = routersList.Remove(routersList.Length - 2, 2);
 
                                 string linksList = data["linksList"] + ", ";
-                                foreach (Connection connection in ConfigLoader.myConnections.Values)
+                                string channelList = data["channels"] + "";
+                                foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
+                                    channelList += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                                }
                                 linksList = linksList.Remove(linksList.Length - 2, 2);
+                                channelList = channelList.Remove(channelList.Length - 1, 1);
 
                                 GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + hostList + linksList + ") to peer RC");
-                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"];
+                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
                                 Program.peerConnection.SendMessage(message);
                             } else if(data["scenario"].Equals("2")) {
                                 //scenariusz #2
                                 GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
+                                CacheChannels(data["channels"]);
                                 string message = "component:RC;name:NetworkTopology;receiver:peer;routersList:" + data["routersList"] + ";linksList:" + data["linksList"] + ";scenario:" + data["scenario"];
                                 Program.peerConnection.SendMessage(message);
                             }
                             else if (data["scenario"].Equals("3")) {
                                 //koniec scenariusza #3
+                                CacheChannels(data["channels"]);
+                                foreach (Connection conn in ConfigLoader.myConnections.Values) {
+                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                                }
                                 CalculateAllPaths();
                             }
                             break;
@@ -105,9 +123,17 @@ namespace ControlCenter {
                             GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
                             if (data["scenario"].Equals("1")) {
                                 //koniec scenariusza #1
+                                CacheChannels(data["channels"]);
+                                foreach(Connection conn in ConfigLoader.myConnections.Values) {
+                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                                }
                                 CalculateAllPaths();
                             } else if (data["scenario"].Equals("2")) {
                                 //koniec scenariusza #2
+                                CacheChannels(data["channels"]);
+                                foreach (Connection conn in ConfigLoader.myConnections.Values) {
+                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                                }
                                 CalculateAllPaths();
                             }
                             break;
@@ -146,9 +172,28 @@ namespace ControlCenter {
                         }
                     }
                     //scenariusz #4
+                    foreach (Connection conn in ConfigLoader.myConnections.Values) {
+                        cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                    }
                     CalculateAllPaths();
                     break;
             }
+        }
+
+        private void CacheChannels(string data) {
+            string[] pieces = data.Split('-');
+            foreach(string link in pieces) {
+                string[] keyAndValue = link.Split(':');
+                cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
+            }
+        }
+
+        private int[] stringToIntArray(string data) {
+            int[] parsedData = new int[data.Length];
+            for(int i=0; i<data.Length; i++) {
+                parsedData[i] = Convert.ToInt32(data[i]);
+            }
+            return parsedData;
         }
 
         private void CalculateAllPaths() {
