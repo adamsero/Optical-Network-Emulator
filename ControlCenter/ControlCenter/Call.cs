@@ -9,16 +9,17 @@ namespace ControlCenter {
 
         private int connectionID;
         private bool interDomainConnection;
+        private bool throughSubnetwork;
         private int startAsID;
         private HostConnection startHostConnection;
         private HostConnection targetHostConnection;
 
-        public Call(int connectionID, bool interDomainConnection, int startAsID, HostConnection startHostConnection, HostConnection targetHostConnection) {
+        public Call(int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection) {
             this.connectionID = connectionID;
             this.interDomainConnection = interDomainConnection;
             this.startAsID = startAsID;
             this.startHostConnection = startHostConnection;
-
+            this.throughSubnetwork = throughSubnetwork;
         }
 
         public int GetConnectionID() {
@@ -39,6 +40,10 @@ namespace ControlCenter {
 
         public HostConnection GetTargetHostConnection() {
             return targetHostConnection;
+        }
+
+        public bool GetThroughSubnetwork() {
+            return throughSubnetwork;
         }
     }
 }

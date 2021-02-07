@@ -19,21 +19,30 @@ namespace ControlCenter {
                     break;
 
                 case "ConnectionTeardown":
-                    GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from NCC"); // InterDomainConnection: " + data["IDC"]
-
-                    var element = NCC.callRegister[Int32.Parse(data["connectionID"])];
-                    bool interDomainConnectionFlag = element.GetInterDomainConnectionFlag();
-                    int asID = element.GetStartAsID();
-
-                    if (!interDomainConnectionFlag && asID == ConfigLoader.ccID) {
-                        GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
-                        message = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
-                        Program.lrm.HandleRequest(Util.DecodeRequest(message));
-                    }
-                    else {
+                    if (ConfigLoader.ccID == 3) {
+                        //CHILD
+                        GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from Parent CC");
                         GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                         message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                         Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                    }
+                    else {
+                        GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from NCC"); // InterDomainConnection: " + data["IDC"]
+
+                        var element = NCC.callRegister[Int32.Parse(data["connectionID"])];
+                        bool interDomainConnectionFlag = element.GetInterDomainConnectionFlag();
+                        int asID = element.GetStartAsID();
+
+                        if (!interDomainConnectionFlag && asID == ConfigLoader.ccID) {
+                            GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
+                            message = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                        }
+                        else {
+                            GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                            message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                        }
                     }
                     break;
 
@@ -46,9 +55,32 @@ namespace ControlCenter {
 
                 case "LinkConnectionInternalDeallocationResponse":
                     GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from Internal LRM : OK");
+
+                    if (NCC.callRegister[Int32.Parse(data["connectionID"])].GetThroughSubnetwork() && ConfigLoader.ccID != 3) {
+                        // PARENT
+                        GUIWindow.PrintLog("CC: Sent ConnectionTeardown(" + data["connectionID"] + ") to Child CC");
+                        message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
+                        Program.childConnection.SendMessage(message);
+                    }
+                    else if (ConfigLoader.ccID == 3) {
+                        // CHILD
+                        GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to Parent CC : OK");
+                        message = "component:CC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
+                        Program.parentConnection.SendMessage(message);
+                    }
+                    else {
+                        GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");
+                        message = "component:NCC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
+                        Program.ncc.HandleRequest(Util.DecodeRequest(message), null);
+                    }
+                    break;
+
+                case "ConnectionTeardownResponse":
+                    //Odpowiedz od CHILD
+                    GUIWindow.PrintLog("CC: Received ConnectionTeardownResponse(" + data["connectionID"] + ") from Child CC : OK");
                     GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");
                     message = "component:NCC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
-                    Program.ncc.HandleRequest(Util.DecodeRequest(message),null);
+                    Program.ncc.HandleRequest(Util.DecodeRequest(message), null);
                     break;
             }
         }
