@@ -56,7 +56,7 @@ namespace ControlCenter {
                 case "LinkConnectionInternalDeallocationResponse":
                     GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from Internal LRM : OK");
 
-                    if (NCC.callRegister[Int32.Parse(data["connectionID"])].GetThroughSubnetwork() && ConfigLoader.ccID != 3) {
+                    if (NCC.callRegister[Int32.Parse(data["connectionID"])].GetThroughSubnetwork() && ConfigLoader.ccID == 2) {
                         // PARENT
                         GUIWindow.PrintLog("CC: Sent ConnectionTeardown(" + data["connectionID"] + ") to Child CC");
                         message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
