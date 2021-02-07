@@ -17,9 +17,6 @@ namespace ControlCenter {
         private readonly IPAddress ipAddress;
         private readonly NCC ncc;
 
-        private PeerConnection peerConnection;
-        private ParentConnection parentConnection;
-
         public InterCcCommunicationServer(NCC ncc) {
             this.ncc = ncc;
             ipAddress = Dns.GetHostEntry(ip).AddressList[0];
@@ -53,11 +50,12 @@ namespace ControlCenter {
             }
 
             if(data["name"].Equals("Registration") && data["type"].Equals("peer")) {
-                peerConnection = new PeerConnection(client, false, ncc);
-                GUIWindow.PrintLog("[TEST] Peer registered");
+                Program.peerConnection = new PeerConnection(client, false, ncc);
+
+                //GUIWindow.PrintLog("[TEST] Peer registered");
             } else if(data["name"].Equals("Registration") && data["type"].Equals("child")) {
-                parentConnection = new ParentConnection(client, ncc);
-                GUIWindow.PrintLog("[TEST] Child registered");
+                Program.parentConnection = new ParentConnection(client, ncc);
+                //GUIWindow.PrintLog("[TEST] Child registered");
             }
         }
     }

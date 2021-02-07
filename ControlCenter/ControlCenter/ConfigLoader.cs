@@ -219,5 +219,41 @@ namespace ControlCenter {
 			}
 
 		}
-	}
+
+        public static Node GetNodeByIP(string ip) {
+            foreach (Host host in myHosts)
+                if (host.getIP().Equals(ip))
+                    return host;
+
+            foreach (Host host in otherHosts)
+                if (host.getIP().Equals(ip))
+                    return host;
+
+            foreach (Router router in myRouters)
+                if (router.getIP().Equals(ip))
+                    return router;
+
+            foreach (Router router in otherRouters)
+                if (router.getIP().Equals(ip))
+                    return router;
+
+            return null;
+        }
+
+        public static Host FindHostByID(int id) {
+            foreach(Host host in myHosts) {
+                if (host.GetHostID() == id)
+                    return host;
+            }
+            return null;
+        }
+
+        public static Router FindRouterByID(int id) {
+            foreach (Router router in myRouters) {
+                if (router.GetHostID() == id)
+                    return router;
+            }
+            return null;
+        }
+    }
 }

@@ -18,6 +18,11 @@ namespace ControlCenter {
         public static InterCcCommunicationServer interCCServer;
         public static PeerConnection peerConnection;
         public static ChildConnection childConnection;
+        public static ParentConnection parentConnection;
+
+        public static CC cc = new CC();
+        public static RC rc = new RC();
+        public static NCC ncc;
 
         [STAThread]
         static void Main(String[] args) {
@@ -40,7 +45,7 @@ namespace ControlCenter {
                         //ConfigLoader.loadConfig(config);
                         //String config = String.Concat(File.ReadAllLines(args[1]));
                         //ConfigLoader.LoadConfig(config, args[2]);
-                        NCC ncc = new NCC();
+                        ncc = new NCC();
                         server = new Server(ncc);
 
                         if(ConfigLoader.ccID == 2) {
