@@ -19,5 +19,8 @@ namespace ControlCenter {
 		public String GetHostName() {
 			return hostName;
 		}
+		public Router GetNeighborRouter() {
+			return neighborRouter;
+        }
 	}
 }
