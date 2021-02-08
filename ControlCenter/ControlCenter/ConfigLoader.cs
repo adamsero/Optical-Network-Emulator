@@ -178,7 +178,11 @@ namespace ControlCenter {
             GUIWindow.ChangeWindowName("ControlCenter" + ccID);
         
 			sortItems();
-		}
+
+            //foreach (Connection edge in myConnections.Values) {
+            //    GUIWindow.PrintLog(edge.GetID().ToString());
+            //}
+        }
 
 		public static void sortItems() {
 

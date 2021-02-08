@@ -18,6 +18,49 @@ namespace ControlCenter {
                     Program.rc.HandleRequest(Util.DecodeRequest(message));
                     break;
 
+                case "RouteTableQueryResponse":
+                    GUIWindow.PrintLog("Received RouteTableQueryResponse(" + data["path"] + ") from RC");
+                    if (data["path"].Equals("null")) {
+                        GUIWindow.PrintLog("CC: Requested connection could not be established");
+                        string message1 = "component:CC;name:ConnectionRequestResponse;succeeded:false";
+                        GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(false) to NCC");
+                        Program.ncc.HandleRequest(Util.DecodeRequest(message1), null);
+                        break;
+                    }
+
+                    //tutaj wysyłamy LRMom request o alokacje, potem PeerCoordination jeśli to połączenie IDC
+                    bool throughSN = ConfigLoader.ccID == 1 ? false : RC.currentPath.throughSN;
+                    Tuple<HostConnection, HostConnection> connections = GetHostConnections(RC.currentPath);
+                    Call call = new Call(RC.currentConnectionID, Convert.ToBoolean(RC.cachedData["IDC"]), ConfigLoader.ccID, throughSN, connections.Item1, connections.Item2);
+                    NCC.callRegister.Add(RC.currentConnectionID, call);
+
+                    GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to internal LRM");
+                    string message2 = "name:LinkConnectionRequest;type:internal;channelRange:" + RC.cachedData["channelRange"];
+                    Program.lrm.HandleRequest(Util.DecodeRequest(message2));
+
+                    break;
+
+                case "LinkConnectionRequestResponse":
+                    switch (data["type"]) {
+                        case "internal":
+                            GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from internal LRM");
+
+                            if (Convert.ToBoolean(RC.cachedData["IDC"])) {
+                                GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to extrenal LRM");
+                                string message3 = "name:LinkConnectionRequest;type:external;channelRange:" + RC.cachedData["channelRange"];
+                                Program.lrm.HandleRequest(Util.DecodeRequest(message3));
+                            } else {
+                                //można robić PeerCoordination
+                            }
+                            break;
+
+                        case "external":
+                            GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from external LRM");
+                            //można robić PeerCoordination
+                            break;
+                    }
+                    break;
+
                 case "ConnectionTeardown":
                     if (ConfigLoader.ccID == 3) {
                         //CHILD
@@ -83,6 +126,20 @@ namespace ControlCenter {
                     Program.ncc.HandleRequest(Util.DecodeRequest(message), null);
                     break;
             }
+        }
+
+        private Tuple<HostConnection, HostConnection> GetHostConnections(Path path) {
+            HostConnection hc1 = null, hc2 = null;
+
+            foreach (HostConnection hostConnection in Server.GetHostConnections()) {
+                if (hostConnection.GetHost() == path.endPoints.Item1)
+                    hc1 = hostConnection;
+
+                if (hostConnection.GetHost() == path.endPoints.Item2)
+                    hc2 = hostConnection;
+            }
+
+            return new Tuple<HostConnection, HostConnection>(hc1, hc2);
         }
 
     }
