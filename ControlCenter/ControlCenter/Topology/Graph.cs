@@ -66,7 +66,7 @@ namespace ControlCenter {
                                        List<int> localPathList) {
 
             if (u.Equals(d)) {
-                //Console.WriteLine(string.Join(" ", localPathList));
+                //GUIWindow.PrintLog(string.Join(" ", localPathList));
                 allPaths.Add(new List<int>(localPathList));
                 // if match found then no need 
                 // to traverse more till depth 

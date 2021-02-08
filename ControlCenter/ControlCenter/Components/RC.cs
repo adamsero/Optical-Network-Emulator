@@ -38,10 +38,11 @@ namespace ControlCenter {
                                 string channelList2 = "";
                                 foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList2 += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                    channelList2 += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                                    channelList2 += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
                                 }                                    
                                 linksList2 = linksList2.Remove(linksList2.Length - 2, 2);
                                 channelList2 = channelList2.Remove(channelList2.Length - 1, 1);
+                                //GUIWindow.PrintLog("Channel List: " + channelList2);
 
                                 GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
                                 string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2;
@@ -61,10 +62,11 @@ namespace ControlCenter {
                             string channelList = "";
                             foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                 linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                channelList += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                                channelList += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
                             }
                             linksList = linksList.Remove(linksList.Length - 2, 2);
                             channelList = channelList.Remove(channelList.Length - 1, 1);
+                            //GUIWindow.PrintLog("Channel List: " + channelList);
 
                             GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + linksList + ") to parent RC");
                             string message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
@@ -94,7 +96,7 @@ namespace ControlCenter {
                                 string channelList = data["channels"] + "";
                                 foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                    channelList += connection.GetID() + ":" + string.Join("", connection.GetSlot()) + "-";
+                                    channelList += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
                                 }
                                 linksList = linksList.Remove(linksList.Length - 2, 2);
                                 channelList = channelList.Remove(channelList.Length - 1, 1);
@@ -112,9 +114,7 @@ namespace ControlCenter {
                             else if (data["scenario"].Equals("3")) {
                                 //koniec scenariusza #3
                                 CacheChannels(data["channels"]);
-                                foreach (Connection conn in ConfigLoader.myConnections.Values) {
-                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
-                                }
+                                LoadMyChannels();
                                 CalculateAllPaths();
                             }
                             break;
@@ -124,16 +124,12 @@ namespace ControlCenter {
                             if (data["scenario"].Equals("1")) {
                                 //koniec scenariusza #1
                                 CacheChannels(data["channels"]);
-                                foreach(Connection conn in ConfigLoader.myConnections.Values) {
-                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
-                                }
+                                LoadMyChannels();
                                 CalculateAllPaths();
                             } else if (data["scenario"].Equals("2")) {
                                 //koniec scenariusza #2
                                 CacheChannels(data["channels"]);
-                                foreach (Connection conn in ConfigLoader.myConnections.Values) {
-                                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
-                                }
+                                LoadMyChannels();
                                 CalculateAllPaths();
                             }
                             break;
@@ -156,6 +152,8 @@ namespace ControlCenter {
                             Program.peerConnection.SendMessage(message);
                         } else {
                             //scenariusz #4
+                            LoadMyChannels();
+                            CalculateAllPaths();
                         }
                     } else if(ConfigLoader.ccID == 2) {
                         if (Convert.ToBoolean(data["IDC"])) {
@@ -171,11 +169,6 @@ namespace ControlCenter {
                             Program.parentConnection.SendMessage(message);
                         }
                     }
-                    //scenariusz #4
-                    foreach (Connection conn in ConfigLoader.myConnections.Values) {
-                        cachedChannels.Add(conn.GetID(), conn.GetSlot());
-                    }
-                    CalculateAllPaths();
                     break;
             }
         }
@@ -183,7 +176,7 @@ namespace ControlCenter {
         private void CacheChannels(string data) {
             string[] pieces = data.Split('-');
             foreach(string link in pieces) {
-                string[] keyAndValue = link.Split(':');
+                string[] keyAndValue = link.Split('=');
                 cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
             }
         }
@@ -196,22 +189,44 @@ namespace ControlCenter {
             return parsedData;
         }
 
+        private void LoadMyChannels() {
+            foreach (Connection conn in ConfigLoader.myConnections.Values) {
+                cachedChannels.Add(conn.GetID(), conn.GetSlot());
+            }
+            cachedChannels.Add(8, ConfigLoader.connections[8].GetSlot());
+        }
+
         private void CalculateAllPaths() {
             Node startingNode = ConfigLoader.GetNodeByIP(cachedData["routerX"]);
             Node endingNode = ConfigLoader.GetNodeByIP(cachedData["routerY"]);
             int speed = Convert.ToInt32(cachedData["speed"]);
+            Host startHost = null;
+            Host endingHost = null;
+            foreach(Host h in ConfigLoader.hosts) {
+                if (startingNode == h.GetNeighborRouter()) startHost = h;
+                if (endingNode == h.GetNeighborRouter()) endingHost = h;   
+            }
 
-            List<Path> paths = Algorithms.AllPaths(startingNode,endingNode);
+            List<Path> paths = Algorithms.AllPaths(startHost, endingHost);
 
+            foreach (Path path in paths) {
+                int[] pathsID = path.getEdges();
+                foreach(KeyValuePair<int,int[]> kvp in cachedChannels) {
+                    GUIWindow.PrintLog("Key: " + kvp.Key + " Value: ");
+                }
+                int n = DetermineGapNo(speed, path.GetLength());
+                int[,] LRMarray = GetLRMarray(pathsID);
+                int[] indexFromTo = EvaluatePath(n, LRMarray);
+                GUIWindow.PrintLog("Test: n: " + n + " index from: " + indexFromTo[0] + " to " + indexFromTo[1]);
+                break;
+            }
 
             //UpdateRoutingTables();
 
             GUIWindow.PrintLog("Path from Router" + startingNode.GetRouterID() + " to Router" + endingNode.GetRouterID() + " at " + speed + " Gb/s");
         }
-
-
-        
-         public void UpdateRoutingTables(Path path, int pathID, bool reverse, bool disconect) {
+       
+        public void UpdateRoutingTables(Path path, int pathID, bool reverse, bool disconect) {
 
             LinkedList<Connection> edges = new LinkedList<Connection>(path.edges);
 
@@ -264,56 +279,47 @@ namespace ControlCenter {
                 }
             }
         }
-
-        
-
-        //metoda wyznaczajaca ilosc potrzebnych szczelin
-        //na podstawie dlugosci calego polaczenia i wymaganej przepustowosci
+  
         public int DetermineGapNo(double linkBandwidth, double pathLen) {
-            int maxM = 5;   //tu wyznaczamy maksymalna modulacje - tu 5 dla QAM32
-            int minD = 20;
-            int maxD = 433; //tu wskazujemy najdluzsza mozliwa sciezke w sieci
             double gapLen = 12.5;
-            //double modulation = Math.Round( (maxM - 1) / (minD - maxD) * pathLen + 1 - ((maxM - 1) * maxD) / (minD - maxD) );
             int modulation;
             if (pathLen > 400) modulation = 2;
             else if (pathLen > 300) modulation = 3;
             else if (pathLen > 200) modulation = 4;
             else if (pathLen > 100) modulation = 5;
             else modulation = 6;
-
             double band = (linkBandwidth * 2) / modulation;
             band *= 1.2; //tu dodajemy zapas - margines ochronny 20%, po 10% z obu stron
-            //GUIWindow.PrintLog("Band: " + band);
             int n = (int)Math.Ceiling(band / gapLen);
-            //GUIWindow.PrintLog("PathLen: " + pathLen + " channels" + n);
+            GUIWindow.PrintLog("DetermineGapNo n: " + n);
             return n;
         }
 
-        //przykładowa LRMarray, normalnie do wczytania od poszczególnych LRM'ów
-        //int[,] LRMarray = new int[,] {  { 1,1,0,0,1,1,0,0,0 },
-        //                                { 0,0,0,0,1,1,0,0,0 },
-        //                                { 0,0,0,0,1,1,1,1,1 },
-        //                                { 1,1,0,1,0,0,0,0,0 },
-        //                                { 1,1,0,1,0,0,0,0,0 }};
-
         public int[,] GetLRMarray(int[] connID) {
+            GUIWindow.PrintLog("GetLRM start");
             int[,] LRMarray = new int[connID.Length, 90];
             int n = 0;
-            foreach (int key in connID) {
-                for (int j = 0; j < 90; j++) {
-                    LRMarray[n, j] = ConfigLoader.connections[key].slot[j];
+            try {
+                foreach (int key in connID) {
+                    GUIWindow.PrintLog("Key: " + key);
+                    int[] buff = cachedChannels[key];
+                    
+                    for (int j = 0; j < 90; j++) {
+                        LRMarray[n, j] = buff[j];
+                    }
+                    n++;
                 }
-                n++;
+            } catch(Exception e) {
+                GUIWindow.PrintLog(e.Message);
+                GUIWindow.PrintLog(e.StackTrace);
             }
+
+            GUIWindow.PrintLog("GetLRM end");
             return LRMarray;
         }
 
-        //metoda wyznaczajaca indeksy szczelin - zwraca tablice int dwoma wartosciami
-        //od jakiego do jakiego indeksu sa wolne szczeliny do wykoszystania
-        //obsługuje tylko tablice LRM o tej samej ilości szczelin!!! wiec trzeba przed
-        //wywolaniem wyrownac wszystkie tablice do jednej dlugosci (najmniejszej)
         public int[] EvaluatePath(int n, int[,] LRMarray) {
+            GUIWindow.PrintLog("EvaluatePath start");
             int[] indexFromTo = { -1, -1 };
             int[] LRMafterEvaluation = new int[LRMarray.GetLength(1)];
             for (int i = 0; i < LRMarray.GetLength(1); i++) {
