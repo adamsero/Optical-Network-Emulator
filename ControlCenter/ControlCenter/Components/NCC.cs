@@ -134,7 +134,7 @@ namespace ControlCenter {
                         
                         if (callRegister[Int32.Parse(data["connectionID"])].GetStartAsID() == ConfigLoader.ccID) {
                             // Pierwszy AS
-                            if (callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
+                            if (!callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
                                 //polaczenie wewnatrzdomenowe
                                 GUIWindow.PrintLog("NCC: Sent CallTeardownCPCC(" + data["connectionID"] + ") to CPCC");
                                 message = "component:CPCC;name:CallTeardownCPCC;connectionID:" + data["connectionID"];
@@ -166,7 +166,7 @@ namespace ControlCenter {
 
                     case "CallTeardownCPCCResponse":
                         GUIWindow.PrintLog("NCC: Received CallTeardownCPCCResponse(" + data["connectionID"] + ") from CPCC: OK");
-                        if (callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
+                        if (!callRegister[Int32.Parse(data["connectionID"])].GetInterDomainConnectionFlag()) {
                             //polaczenie wewnatrzdomenowe
                             GUIWindow.PrintLog("NCC: Sent CallTeardownCPCCResponse(" + data["connectionID"] + ") to CPCC : OK");
                             message = "component:CPCC;name:CallTeardownCPCCResponse;connectionID:" + data["connectionID"];
