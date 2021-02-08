@@ -186,6 +186,12 @@ namespace ControlCenter {
                         message = "component:CPCC;name:CallTeardownCPCCResponse;connectionID:" + data["connectionID"];
                         callRegister[Int32.Parse(data["connectionID"])].GetStartHostConnection().SendMessage(message);
                         break;
+
+                    case "ConnectionRequestResponse":
+                        if(!Convert.ToBoolean(data["succeeded"])) {
+
+                        }
+                        break;
                 }
             } catch(Exception e) {
                 GUIWindow.PrintLog(e.Message);

@@ -8,10 +8,15 @@ namespace ControlCenter {
     class Path : IComparable {
 
         public LinkedList<Connection> edges = new LinkedList<Connection>();
+        public List<int> routerIDs = new List<int>();
+        public Tuple<Host, Host> endPoints;
         private int length = 0;
+        public bool throughSN;
 
         public Path(List<int> routersList, Host initial, Host final) {
             int[] routers = routersList.ToArray();
+            routerIDs = new List<int>(routersList);
+            endPoints = new Tuple<Host, Host>(initial, final);
 
             edges.AddLast(SelectEdge(initial, FindRouterByID(routers[0])));
             for (int i = 0; i < routers.Length - 1; i++) {
@@ -36,8 +41,11 @@ namespace ControlCenter {
 
         private Router FindRouterByID(int id) {
             foreach (Router router in ConfigLoader.routers) {
-                if (router.GetRouterID() == id)
+                if (router.GetRouterID() == id) {
+                    if (router.GetAsID() == 3)
+                        throughSN = true;
                     return router;
+                }
             }
             return null;
         }
@@ -66,6 +74,25 @@ namespace ControlCenter {
                 line += edge.endPoints.Item1.GetRouterID() + "-" + edge.endPoints.Item2.GetRouterID() + "   ";
             }
             GUIWindow.PrintLog(line);
+        }
+
+        public override string ToString() {
+            string line = "";
+            int lastID = 0;
+            foreach (Connection edge in edges) {
+                int id1 = edge.endPoints.Item1.GetRouterID();
+                int id2 = edge.endPoints.Item2.GetRouterID();
+
+                if(id1 != lastID) {
+                    line += id2 + "-" + id1 + " ";
+                    lastID = id1;
+                } else {
+                    line += id1 + "-" + id2 + " ";
+                    lastID = id2;
+                }
+                
+            }
+            return line;
         }
     }
 }

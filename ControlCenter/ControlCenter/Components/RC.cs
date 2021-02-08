@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 namespace ControlCenter {
     class RC {
 
-        private readonly Dictionary<string, string> cachedData = new Dictionary<string, string>();
-        private Dictionary<int, int[]> cachedChannels = new Dictionary<int, int[]>();
+        public static readonly Dictionary<string, string> cachedData = new Dictionary<string, string>();
+        public static Dictionary<int, int[]> cachedChannels = new Dictionary<int, int[]>();
+        public static Path currentPath;
+        public static int currentConnectionID = 1;
 
         public void HandleRequest(Dictionary<string, string> data) {
-            switch(data["name"]) {
+            switch (data["name"]) {
                 case "NetworkTopology":
                     switch(data["receiver"]) {
                         case "peer":
@@ -45,7 +47,7 @@ namespace ControlCenter {
                                 //GUIWindow.PrintLog("Channel List: " + channelList2);
 
                                 GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
-                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2;
+                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2 + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             }
                             break;
@@ -93,7 +95,7 @@ namespace ControlCenter {
                                 routersList = routersList.Remove(routersList.Length - 2, 2);
 
                                 string linksList = data["linksList"] + ", ";
-                                string channelList = data["channels"] + "";
+                                string channelList = data["channels"] + "-";
                                 foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
                                     channelList += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
@@ -102,7 +104,7 @@ namespace ControlCenter {
                                 channelList = channelList.Remove(channelList.Length - 1, 1);
 
                                 GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + hostList + linksList + ") to peer RC");
-                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
+                                string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             } else if(data["scenario"].Equals("2")) {
                                 //scenariusz #2
@@ -123,11 +125,13 @@ namespace ControlCenter {
                             GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
                             if (data["scenario"].Equals("1")) {
                                 //koniec scenariusza #1
+                                cachedData.Add("peerConnID", data["connID"]);
                                 CacheChannels(data["channels"]);
                                 LoadMyChannels();
                                 CalculateAllPaths();
                             } else if (data["scenario"].Equals("2")) {
                                 //koniec scenariusza #2
+                                cachedData.Add("peerConnID", data["connID"]);
                                 CacheChannels(data["channels"]);
                                 LoadMyChannels();
                                 CalculateAllPaths();
@@ -143,6 +147,7 @@ namespace ControlCenter {
                     cachedData.Add("routerX", data["routerX"]);
                     cachedData.Add("routerY", data["routerY"]);
                     cachedData.Add("speed", data["speed"]);
+                    cachedData.Add("IDC", data["IDC"]);
 
                     if (ConfigLoader.ccID == 1) {
                         if(Convert.ToBoolean(data["IDC"])) {
@@ -179,12 +184,13 @@ namespace ControlCenter {
                 string[] keyAndValue = link.Split('=');
                 cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
             }
+
         }
 
         private int[] stringToIntArray(string data) {
             int[] parsedData = new int[data.Length];
             for(int i=0; i<data.Length; i++) {
-                parsedData[i] = Convert.ToInt32(data[i]);
+                parsedData[i] = Convert.ToInt32(data[i] + "");
             }
             return parsedData;
         }
@@ -208,22 +214,59 @@ namespace ControlCenter {
             }
 
             List<Path> paths = Algorithms.AllPaths(startHost, endingHost);
+            if(paths == null || paths.Count == 0) {
+                //nie istnieje żadna ścieżka
+                return;
+            }
 
+            Path chosenPath = null;
             foreach (Path path in paths) {
                 int[] pathsID = path.getEdges();
-                foreach(KeyValuePair<int,int[]> kvp in cachedChannels) {
-                    GUIWindow.PrintLog("Key: " + kvp.Key + " Value: ");
-                }
                 int n = DetermineGapNo(speed, path.GetLength());
                 int[,] LRMarray = GetLRMarray(pathsID);
                 int[] indexFromTo = EvaluatePath(n, LRMarray);
-                GUIWindow.PrintLog("Test: n: " + n + " index from: " + indexFromTo[0] + " to " + indexFromTo[1]);
-                break;
+                cachedData.Add("channelRange", indexFromTo[0] + "-" + indexFromTo[1]);
+                if (indexFromTo[0] != -1 && indexFromTo[1] != -1) {
+                    //GUIWindow.PrintLog("Test: n: " + n + " index from: " + indexFromTo[0] + " to " + indexFromTo[1]);
+                    chosenPath = path;
+                    break;
+                }
+            }
+            currentPath = chosenPath;
+
+            //GUIWindow.PrintLog("Path from Router" + startingNode.GetRouterID() + " to Router" + endingNode.GetRouterID() + " at " + speed + " Gb/s");
+            if(chosenPath != null) {
+                SendTablesToOwnRouters();
             }
 
-            //UpdateRoutingTables();
+            int nextConnectionID = currentConnectionID + 1;
+            if(Convert.ToBoolean(cachedData["IDC"])) {
+                nextConnectionID = Math.Max(nextConnectionID, Convert.ToInt32(cachedData["peerConnID"]) + 1);
+            }
+            currentConnectionID = nextConnectionID;
 
-            GUIWindow.PrintLog("Path from Router" + startingNode.GetRouterID() + " to Router" + endingNode.GetRouterID() + " at " + speed + " Gb/s");
+            GUIWindow.PrintLog("RC: Sending connection tables to Routers");
+            UpdateRoutingTables(chosenPath, currentConnectionID, false, false);
+            UpdateRoutingTables(chosenPath, currentConnectionID, true, false);
+
+            string pathString = (chosenPath == null ? "null" : chosenPath.ToString());
+            string message = "component:CC;name:RouteTableQueryResponse;path:" + pathString;
+            GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(" + pathString + ") to CC");
+            Program.cc.HandleRequest(Util.DecodeRequest(message));
+        }
+
+        private void SendTablesToOwnRouters() {
+            foreach(int routerID in currentPath.routerIDs) {
+                //Router router = ConfigLoader.FindRouterByID(routerID);
+                //if (router == null)
+                //    continue;
+
+                foreach(RouterConnection routerConnection in Server.GetRouterConnections()) {
+                    if(routerConnection.GetID() == routerID) {
+
+                    }
+                }
+            }
         }
        
         public void UpdateRoutingTables(Path path, int pathID, bool reverse, bool disconect) {
@@ -249,11 +292,11 @@ namespace ControlCenter {
                     int port;
                     if (edge.endPoints.Item1 == firstRouter) {
                         port = disconect ? -1 : edge.connPorts.Item1;
-                        FindRouterConnectionAndSend(firstRouter, pathID, port);
+                        FindRouterConnectionAndSend(firstRouter, pathID, port, !reverse);
                         firstRouter = (Router)edge.endPoints.Item2;
                     } else {
                         port = disconect ? -1 : edge.connPorts.Item2;
-                        FindRouterConnectionAndSend(firstRouter, pathID, port);
+                        FindRouterConnectionAndSend(firstRouter, pathID, port, !reverse);
                         firstRouter = (Router)edge.endPoints.Item1;
                     }
                 } catch (Exception e) {
@@ -268,13 +311,15 @@ namespace ControlCenter {
             //savedLogs = uniqueValues;
         }
 
-        private void FindRouterConnectionAndSend(Router router, int id, int port) {
+        private void FindRouterConnectionAndSend(Router router, int id, int port, bool log) {
             foreach (RouterConnection routerConnection in Server.GetRouterConnections()) {
                 if (routerConnection.router == router) {
                     Dictionary<int, int> routingTable = new Dictionary<int, int>();
                     routingTable.Add(id, port);
                     routerConnection.SendRoutingTable(routingTable);
-
+                    if(log) {
+                        GUIWindow.PrintLog("RC: Sent connection table to Router #" + router.GetRouterID());
+                    }
                     break;
                 }
             }
@@ -291,35 +336,32 @@ namespace ControlCenter {
             double band = (linkBandwidth * 2) / modulation;
             band *= 1.2; //tu dodajemy zapas - margines ochronny 20%, po 10% z obu stron
             int n = (int)Math.Ceiling(band / gapLen);
-            GUIWindow.PrintLog("DetermineGapNo n: " + n);
+            //GUIWindow.PrintLog("DetermineGapNo n: " + n);
             return n;
         }
 
         public int[,] GetLRMarray(int[] connID) {
-            GUIWindow.PrintLog("GetLRM start");
             int[,] LRMarray = new int[connID.Length, 90];
             int n = 0;
             try {
                 foreach (int key in connID) {
-                    GUIWindow.PrintLog("Key: " + key);
                     int[] buff = cachedChannels[key];
                     
                     for (int j = 0; j < 90; j++) {
                         LRMarray[n, j] = buff[j];
                     }
                     n++;
+
                 }
             } catch(Exception e) {
                 GUIWindow.PrintLog(e.Message);
                 GUIWindow.PrintLog(e.StackTrace);
             }
 
-            GUIWindow.PrintLog("GetLRM end");
             return LRMarray;
         }
 
         public int[] EvaluatePath(int n, int[,] LRMarray) {
-            GUIWindow.PrintLog("EvaluatePath start");
             int[] indexFromTo = { -1, -1 };
             int[] LRMafterEvaluation = new int[LRMarray.GetLength(1)];
             for (int i = 0; i < LRMarray.GetLength(1); i++) {
