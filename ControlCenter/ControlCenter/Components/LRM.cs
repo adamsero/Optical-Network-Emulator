@@ -80,10 +80,10 @@ namespace ControlCenter.Components {
                             }
                         }
 
-                        GUIWindow.PrintLog("External LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
-                        GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from External LRM : DEALLOCATED");
-                        GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to External LRM : OK");
-                        GUIWindow.PrintLog("External LRM: Received LocalTopologyResponse() from RC : OK");
+                        GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
+                        GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM : DEALLOCATED");
+                        GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
+                        GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
                     }
                     GUIWindow.UpdateChannelTable();
 
@@ -105,7 +105,11 @@ namespace ControlCenter.Components {
                                 for(int i = Convert.ToInt32(range[0]); i <= Convert.ToInt32(range[1]); i++) {
                                     connection.slot[i] = RC.currentConnectionID;
                                 }
-                                //GUIWindow.PrintLog("Edge #" + connection.GetID() + ": " + string.Join("", connection.slot));
+
+                                GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC");
+                                GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM");
+                                GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
+                                GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
                             }
                             GUIWindow.UpdateChannelTable();
                             GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionRequestResponse() to CC");
@@ -119,9 +123,16 @@ namespace ControlCenter.Components {
                             for (int i = Convert.ToInt32(range2[0]); i <= Convert.ToInt32(range2[1]); i++) {
                                 extConnection.slot[i] = RC.currentConnectionID;
                             }
-                            //GUIWindow.PrintLog("Edge #" + extConnection.GetID() + ": " + string.Join("", extConnection.slot));
-                            GUIWindow.PrintLog("External LRM: Sent LinkConnectionRequestResponse() to CC");
-                            Program.cc.HandleRequest(Util.DecodeRequest("name:LinkConnectionRequestResponse;type:external"));
+
+                            GUIWindow.PrintLog("External LRM: Sent LocalTopology(" + 8 + ": " + String.Join("", extConnection.slot) + ") to RC");
+                            GUIWindow.PrintLog("RC: Received LocalTopology(" + 8 + ": " + String.Join("", extConnection.slot) + ") from External LRM");
+                            GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to External LRM : OK");
+                            GUIWindow.PrintLog("External LRM: Received LocalTopologyResponse() from RC : OK");
+
+                            if (Convert.ToBoolean(data["respond"])) {
+                                GUIWindow.PrintLog("External LRM: Sent LinkConnectionRequestResponse() to CC");
+                                Program.cc.HandleRequest(Util.DecodeRequest("name:LinkConnectionRequestResponse;type:external"));
+                            }
                             break;
                     }
                     break;
