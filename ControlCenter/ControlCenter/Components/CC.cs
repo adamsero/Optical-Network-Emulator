@@ -108,7 +108,7 @@ namespace ControlCenter {
                         bool interDomainConnectionFlag = element.GetInterDomainConnectionFlag();
                         int asID = element.GetStartAsID();
 
-                        if (!interDomainConnectionFlag && asID == ConfigLoader.ccID) {
+                        if (interDomainConnectionFlag && asID == ConfigLoader.ccID) {
                             GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
                             message = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
                             Program.lrm.HandleRequest(Util.DecodeRequest(message));
