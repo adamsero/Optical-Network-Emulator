@@ -67,6 +67,10 @@ namespace ControlCenter {
                     case "LRM":
                         Program.lrm.HandleRequest(data);
                         break;
+
+                    case "CC":
+                        Program.cc.HandleRequest(data);
+                        break;
                 }
             }
         }

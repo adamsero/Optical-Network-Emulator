@@ -50,15 +50,47 @@ namespace ControlCenter {
                                 string message3 = "name:LinkConnectionRequest;type:external;channelRange:" + RC.cachedData["channelRange"];
                                 Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                             } else {
-                                //można robić PeerCoordination
+
+                                //connectionRequestResponse
+                                
+                                
                             }
                             break;
 
                         case "external":
                             GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from external LRM");
                             //można robić PeerCoordination
+                            
+                            try {
+
+                                string listOfRouters= "";
+                                foreach (int router in RC.currentPath.routerIDs) {
+                                    listOfRouters +=router+"-";
+
+                                }
+                                string message4 = "component:CC;name:PeerCoordination;connectionID:" + RC.currentConnectionID + ";routerX:" + RC.cachedData["routerX"] + ";routerY:" + RC.cachedData["routerY"] 
+                                    + ";routerIDs:" + listOfRouters + ";endPoint1:" + RC.currentPath.endPoints.Item1.GetHostID()+";"+ "endPoint2:" + RC.currentPath.endPoints.Item2.GetHostID() + ";";
+
+                                GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] +", path:" + listOfRouters + ") to external CC");
+                                if (Program.parentConnection == null)
+                                    GUIWindow.PrintLog("null");
+                                Program.peerConnection.SendMessage(message4);
+                                
+
+                            }
+                            catch (Exception e) {
+                                GUIWindow.PrintLog(e.Message);
+                                GUIWindow.PrintLog(e.StackTrace);
+                                
+                            }
+                            //int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection
                             break;
                     }
+                    break;
+
+                case "PeerCoordination":
+
+
                     break;
 
                 case "ConnectionTeardown":
