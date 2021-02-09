@@ -13,13 +13,16 @@ namespace ControlCenter {
         private int startAsID;
         private HostConnection startHostConnection;
         private HostConnection targetHostConnection;
+        private Path path;
 
-        public Call(int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection) {
+        public Call(int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection, Path path) {
             this.connectionID = connectionID;
             this.interDomainConnection = interDomainConnection;
             this.startAsID = startAsID;
             this.startHostConnection = startHostConnection;
+            this.targetHostConnection = targetHostConnection;
             this.throughSubnetwork = throughSubnetwork;
+            this.path = path;
         }
 
         public int GetConnectionID() {
@@ -44,6 +47,10 @@ namespace ControlCenter {
 
         public bool GetThroughSubnetwork() {
             return throughSubnetwork;
+        }
+
+        public Path GetPath() {
+            return path;        
         }
     }
 }

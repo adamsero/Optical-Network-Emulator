@@ -35,7 +35,7 @@ namespace ControlCenter {
                             cachedPath = new Path(routerID2, hostX2, hostY2);
                             cachedPath.channelRange = data["channelRange"];
                             Tuple<HostConnection, HostConnection> connections2 = GetHostConnections(cachedPath);
-                            Call call2 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections2.Item1, connections2.Item2);
+                            Call call2 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections2.Item1, connections2.Item2, cachedPath);
                             NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call2);
 
                             GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
@@ -71,7 +71,7 @@ namespace ControlCenter {
                     //tutaj wysyłamy LRMom request o alokacje, potem PeerCoordination jeśli to połączenie IDC
                     bool throughSN = ConfigLoader.ccID == 1 ? false : RC.currentPath.throughSN;
                     Tuple<HostConnection, HostConnection> connections = GetHostConnections(RC.currentPath);
-                    Call call = new Call(RC.currentConnectionID, Convert.ToBoolean(RC.cachedData["IDC"]), ConfigLoader.ccID, throughSN, connections.Item1, connections.Item2);
+                    Call call = new Call(RC.currentConnectionID, Convert.ToBoolean(RC.cachedData["IDC"]), ConfigLoader.ccID, throughSN, connections.Item1, connections.Item2, RC.currentPath);
                     NCC.callRegister.Add(RC.currentConnectionID, call);
 
                     GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to internal LRM");
@@ -166,7 +166,9 @@ namespace ControlCenter {
                     cachedPath = new Path(routerID, hostX, hostY);
                     cachedPath.channelRange = data["channelRange"];
                     Tuple<HostConnection, HostConnection> connections1 = GetHostConnections(cachedPath);
-                    Call call1 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections1.Item1, connections1.Item2);
+                    //GUIWindow.PrintLog(connections1.Item1.ToString());
+                    //GUIWindow.PrintLog(connections1.Item2.GetID().ToString());
+                    Call call1 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections1.Item1, connections1.Item2, cachedPath);
                     NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call1);
 
                     cachedMessage = "component:CC;name:ConnectionRequest;layer:lower;connID:" + data["connID"] + ";routerX:" + data["routerX"] + ";routerY:" + data["routerY"]
@@ -198,6 +200,17 @@ namespace ControlCenter {
                     break;
 
                 case "ConnectionTeardown":
+                    Path path = NCC.callRegister[Int32.Parse(data["connectionID"])].GetPath();
+
+                    GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["connectionID"] +", " + path.ToString() + ", disconnect) to RC");
+                    GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) from CC");
+
+                    Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), false, true);
+                    //Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), true, true);
+
+                    GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC : OK");
+                    GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC : OK");
+                    
                     if (ConfigLoader.ccID == 3) {
                         //CHILD
                         GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from Parent CC");
@@ -214,13 +227,20 @@ namespace ControlCenter {
 
                         if (interDomainConnectionFlag && asID == ConfigLoader.ccID) {
                             GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
-                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
+                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"] + ";deleteChannels:true";
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
                         else {
+
+                            GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
+                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"] + ";deleteChannels:false";
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message3));
+
+                            /*
                             GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                             string message3 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
+                            */
                         }
                     }
                     break;
@@ -239,13 +259,13 @@ namespace ControlCenter {
                         // PARENT
                         GUIWindow.PrintLog("CC: Sent ConnectionTeardown(" + data["connectionID"] + ") to Child CC");
                         message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
-                        Program.childConnection.SendMessage(message);
+                        Program.parentConnection.SendMessage(message);
                     }
                     else if (ConfigLoader.ccID == 3) {
                         // CHILD
                         GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to Parent CC : OK");
                         message = "component:CC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
-                        Program.parentConnection.SendMessage(message);
+                        Program.childConnection.SendMessage(message);
                     }
                     else {
                         GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");

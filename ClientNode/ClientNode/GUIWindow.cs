@@ -13,7 +13,7 @@ using FrameLib;
 namespace ClientNode {
     public partial class GUIWindow : Form {
 
-        private static GUIWindow instance;
+        public static GUIWindow instance;
         private List<string> logBuffer = new List<string>();
         private readonly Dictionary<string, string> hostIPs = new Dictionary<string, string>();
         private static int requestedBandwidth;
@@ -56,6 +56,10 @@ namespace ClientNode {
             instance.SendButton.Enabled = state;
         }
 
+        public Button GetToggleButton() {
+            return ToggleButton;
+        }
+
         private void ToggleButton_Click(object sender, EventArgs e) {
             ManageCall(true);
 
@@ -80,7 +84,6 @@ namespace ClientNode {
             instance.SetButtonGreen();
             instance.MessageBox.Enabled = false;
             instance.SendButton.Enabled = false;
-
         }
 
         private void ManageCall(bool enableDestinationRestrain) {
@@ -95,8 +98,9 @@ namespace ClientNode {
                     Program.cpcc.SendCallRequest("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
                     break;
 
-                case "END":                  
-                    //Program.cpcc.sendCallTeardownToNCC("Host" + ConfigLoader.nodeID, Destination.Text, requestedBandwidth);
+                case "END":
+                    Program.cpcc.SendCallTeardownCPCC("Host" + ConfigLoader.nodeID, CPCC.cachedDestination, CPCC.connectionID);
+
                     break;
             }
         }
@@ -134,7 +138,7 @@ namespace ClientNode {
 
             //GUIWindow.PrintLog("CONN ID: " + Program.cpcc.connectionID);
             MessageBox.Invoke((MethodInvoker)delegate {
-                CloudConnection.SendMessage(Program.cpcc.connectionID, MessageBox.Text, destinationName);
+                CloudConnection.SendMessage(CPCC.connectionID, MessageBox.Text, destinationName);
             });
         }
 
