@@ -272,5 +272,18 @@ namespace ControlCenter {
             }
             return null;
         }
+
+        public static Router FindRouterAmongAll(int id) {
+            foreach (Router router in myRouters) {
+                if (router.GetHostID() == id)
+                    return router;
+            }
+
+            foreach (Router router in otherRouters) {
+                if (router.GetHostID() == id)
+                    return router;
+            }
+            return null;
+        }
     }
 }

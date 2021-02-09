@@ -13,7 +13,7 @@ namespace ControlCenter {
         private int startAsID;
         private HostConnection startHostConnection;
         private HostConnection targetHostConnection;
-        private Path path;
+        public Path path;
 
         public Call(int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection, Path path) {
             this.connectionID = connectionID;
