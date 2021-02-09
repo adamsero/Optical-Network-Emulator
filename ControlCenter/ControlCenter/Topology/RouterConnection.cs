@@ -27,8 +27,13 @@ namespace ControlCenter {
             stream = client.GetStream();
             reader = new StreamReader(stream);
             router.working = true;
-            //reader.BaseStream.ReadTimeout = 3000;
-            ReceiveKeepAlive();
+
+            try {
+                ReceiveKeepAlive();
+            } catch(Exception e) {
+                GUIWindow.PrintLog(e.Message);
+                GUIWindow.PrintLog(e.StackTrace);
+            }
         }
 
         public int GetID() {
@@ -56,10 +61,16 @@ namespace ControlCenter {
                     } catch(IOException) {
                         //GUIWindow.PrintLog("Failed to receive KEEP-ALIVE from Router #" + id);
                         GUIWindow.PrintLog("RC: Router #" + id + " has stopped working.");
+                        GUIWindow.PrintLog("CC: Router #" + id + " has stopped working.");
                         router.working = false;
                         working = false;
                         server.RemoveRouterConnection(this);
                         //redirect route
+                        foreach(int connectionID in currentConnections) {
+                            GUIWindow.PrintLog("CC: Sent FastReroute(" + connectionID + ") to RC");
+                            Program.rc.FastReroute(NCC.callRegister[connectionID], connectionID);
+                        }
+
                         break;
                     }
                 }

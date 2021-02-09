@@ -33,7 +33,7 @@ namespace ControlCenter {
 
                                 string routersList2 = "Routers = ";
                                 foreach (Router router in ConfigLoader.myRouters)
-                                    routersList2 += router.GetRouterID() + ", ";
+                                    routersList2 += (router.working ? "" : "!") + router.GetRouterID() + ", ";
                                 routersList2 = routersList2.Remove(routersList2.Length - 2, 2);
 
                                 string linksList2 = " Links = ";
@@ -57,7 +57,7 @@ namespace ControlCenter {
                             GUIWindow.PrintLog("RC: Received TopologyQuery() from parent RC");
                             string routersList = "Routers = ";
                             foreach (Router router in ConfigLoader.myRouters)
-                                routersList += router.GetRouterID() + ", ";
+                                routersList += (router.working ? "" : "!") + router.GetRouterID() + ", ";
                             routersList = routersList.Remove(routersList.Length - 2, 2);
 
                             string linksList = " Connections = ";
@@ -91,7 +91,7 @@ namespace ControlCenter {
 
                                 string routersList = data["routersList"] + ", ";
                                 foreach (Router router in ConfigLoader.myRouters)
-                                    routersList += router.GetRouterID() + ", ";
+                                    routersList += (router.working ? "" : "!") + router.GetRouterID() + ", ";
                                 routersList = routersList.Remove(routersList.Length - 2, 2);
 
                                 string linksList = data["linksList"] + ", ";
@@ -110,12 +110,14 @@ namespace ControlCenter {
                                 //scenariusz #2
                                 GUIWindow.PrintLog("RC: Sent TopologyQuery() to peer RC");
                                 CacheChannels(data["channels"]);
+                                FlagRouters(data["routersList"]);
                                 string message = "component:RC;name:NetworkTopology;receiver:peer;routersList:" + data["routersList"] + ";linksList:" + data["linksList"] + ";scenario:" + data["scenario"];
                                 Program.peerConnection.SendMessage(message);
                             }
                             else if (data["scenario"].Equals("3")) {
                                 //koniec scenariusza #3
                                 CacheChannels(data["channels"]);
+                                FlagRouters(data["routersList"]);
                                 LoadMyChannels();
                                 CalculateAllPaths();
                             }
@@ -127,12 +129,14 @@ namespace ControlCenter {
                                 //koniec scenariusza #1
                                 cachedData.Add("peerConnID", data["connID"]);
                                 CacheChannels(data["channels"]);
+                                FlagRouters(data["routersList"]);
                                 LoadMyChannels();
                                 CalculateAllPaths();
                             } else if (data["scenario"].Equals("2")) {
                                 //koniec scenariusza #2
                                 cachedData.Add("peerConnID", data["connID"]);
                                 CacheChannels(data["channels"]);
+                                FlagRouters(data["routersList"]);
                                 LoadMyChannels();
                                 CalculateAllPaths();
                             }
@@ -186,6 +190,26 @@ namespace ControlCenter {
                     GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC");
                     Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:SendConnectionTablesResponse"));
                     break;
+            }
+        }
+
+        private void FlagRouters(string routerData) {
+            string[] indices = routerData.Split('=')[1].Split(',');
+            foreach(string indexWithSpace in indices) {
+                int index;
+                bool working;
+
+                if(indexWithSpace[1] == '!') {
+                    index = Convert.ToInt32(indexWithSpace.Substring(2));
+                    working = false;
+                } else {
+                    index = Convert.ToInt32(indexWithSpace.Substring(1));
+                    working = true;
+                }
+
+                Router router = ConfigLoader.FindRouterAmongAll(index);
+                if (router != null)
+                    router.working = working;
             }
         }
 
@@ -260,6 +284,7 @@ namespace ControlCenter {
                         cachedData["channelRange"] = indexFromTo[0] + "-" + indexFromTo[1];
                     }
                     chosenPath = path;
+                    chosenPath.channelRange = indexFromTo[0] + "-" + indexFromTo[1];
                     break;
                 }
             }
@@ -271,7 +296,6 @@ namespace ControlCenter {
                 Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:RouteTableQueryResponse;path:null"));
                 return;
             }
-            SendTablesToOwnRouters();
 
             int nextConnectionID = currentConnectionID + 1;
             if(Convert.ToBoolean(cachedData["IDC"])) {
@@ -289,20 +313,72 @@ namespace ControlCenter {
             Program.cc.HandleRequest(Util.DecodeRequest(message));
         }
 
-        private void SendTablesToOwnRouters() {
-            foreach(int routerID in currentPath.routerIDs) {
-                //Router router = ConfigLoader.FindRouterByID(routerID);
-                //if (router == null)
-                //    continue;
+        public bool FastReroute(Call call, int connectionID) {
+            GUIWindow.PrintLog("RC: Received FastReroute(" + connectionID + ") from CC");
 
-                foreach(RouterConnection routerConnection in Server.GetRouterConnections()) {
-                    if(routerConnection.GetID() == routerID) {
+            Path oldPath = call.GetPath();
+            List<Path> paths = null;
+            try {
+                paths = Algorithms.AllPaths(oldPath.endPoints.Item1, oldPath.endPoints.Item2);
+            } catch(Exception e) {
+                GUIWindow.PrintLog(e.Message);
+                GUIWindow.PrintLog(e.StackTrace);
+            }
 
+            if (paths == null || paths.Count == 0) {
+                //nie istnieje żadna ścieżka -> należy przejść wyżej lub rozłączyć jeśli jesteśmy już na górze
+                return false;
+            }
+
+            Path newPath = paths[0];
+            NCC.callRegister[connectionID].path = newPath;
+            UpdateRoutingTables(oldPath, call.GetConnectionID(), false, true);
+            UpdateRoutingTables(newPath, call.GetConnectionID(), false, false);
+            UpdateRoutingTables(newPath, call.GetConnectionID(), true, false);
+
+            GUIWindow.PrintLog("RC: Sent FastRerouteResponse() to CC");
+            GUIWindow.PrintLog("CC: Received FastRerouteResponse() from RC");
+            GUIWindow.PrintLog("CC: Sent ChannelReallocation() to internal LRM");
+            GUIWindow.PrintLog("Internal LRM: Received ChannelReallocation() from CC");
+
+            foreach(Connection connection in oldPath.edges) {
+                if (!ConfigLoader.myConnections.Values.Contains(connection))
+                    continue;
+
+                for (int i = 0; i < connection.slot.Length; i++) {
+                    if (connection.slot[i] == connectionID) {
+                        connection.slot[i] = 0;
                     }
                 }
+
+                GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
+                GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM : DEALLOCATED");
+                GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
+                GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
             }
+
+            string[] range = oldPath.channelRange.Split('-');
+            foreach (Connection connection in newPath.edges) {
+                if (!ConfigLoader.myConnections.Values.Contains(connection))
+                    continue;
+
+                for (int i = Convert.ToInt32(range[0]); i <= Convert.ToInt32(range[1]); i++) {
+                    connection.slot[i] = RC.currentConnectionID;
+                }
+
+                GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC");
+                GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM");
+                GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
+                GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
+            }
+            GUIWindow.UpdateChannelTable();
+
+            GUIWindow.PrintLog("Internal LRM: Sent ChannelReallocationResponse() to CC");
+            GUIWindow.PrintLog("CC: Received ChannelReallocationResponse() from Internal LRM");
+
+            return true;
         }
-       
+
         public void UpdateRoutingTables(Path path, int pathID, bool reverse, bool disconect) {
 
             LinkedList<Connection> edges = new LinkedList<Connection>(path.edges);
@@ -338,11 +414,6 @@ namespace ControlCenter {
 
                 }
             }
-
-            //var uniqueValues = savedLogs.GroupBy(pair => pair.Value)
-            //             .Select(group => group.First())
-            //             .ToDictionary(pair => pair.Key, pair => pair.Value);
-            //savedLogs = uniqueValues;
         }
 
         private void FindRouterConnectionAndSend(Router router, int id, int port, bool log) {
@@ -461,56 +532,5 @@ namespace ControlCenter {
                 }
             }
         }
-
-        /*
-        private bool isInternal(String startIP, String endIP) {
-
-            bool startMatch = false;
-            bool endMatch = false;
-            foreach (Host h in ConfigLoader.GetHosts()) {
-                if (h.getIP().Equals(startIP) && h.GetAsID() == this.getConnectonControl().GetNCC().getAsID()) {
-                    startMatch = true;
-                }
-                if (h.getIP().Equals(endIP) && h.GetAsID() == this.getConnectonControl().GetNCC().getAsID()) {
-                    endMatch = true;
-                }
-            }
-
-            if (startMatch && endMatch) {
-                return true;
-            }
-            else {
-                return false;
-            }
-
-        }
-
-        private void extractSubnetInfo(Path path, bool internalConnection) {
-            if (internalConnection) {
-                subnetPair = null;
-            }
-            else {
-
-                LinkedList<Router> routers = new LinkedList<Router>();
-
-                foreach (Router r in path.pathRouters) {
-                    if (r.GetSubnetworkRouter()) {
-                        routers.AddLast(r);
-                    }
-                }
-
-                Router start = routers.First.Value;
-                Router end = routers.Last.Value;
-
-                if (start != null && end != null) {
-                    subnetPair = new Tuple<Node, Node>(start, end);
-                }
-                else {
-                    subnetPair = null;
-                }
-            }
-        }
-         
-         */
     }
 }
