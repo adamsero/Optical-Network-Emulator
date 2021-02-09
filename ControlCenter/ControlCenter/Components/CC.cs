@@ -87,6 +87,12 @@ namespace ControlCenter {
 
                             if (data["asType"].Equals("second")) {
                                 if (cachedPath.throughSN && ConfigLoader.ccID == 2) {
+                                    //tu jeszcze external LinkConnectionRequest
+                                    string message3 = "name:LinkConnectionRequest;type:external;respond:false;channelRange:" + cachedPath.channelRange;
+                                    Program.lrm.HandleRequest(Util.DecodeRequest(message3));
+                                    GUIWindow.PrintLog("External LRM: Sent LinkConnectionRequestResponse() to CC");
+                                    GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from External LRM");
+
                                     var decoded = Util.DecodeRequest(cachedMessage);
                                     cachedScenario = 1;
                                     GUIWindow.PrintLog("CC: Sent ConnectionRequest(routerX: " + decoded["routerX"] + ", routerY: " + decoded["routerY"] + ", path:" + decoded["path"] + ") to child CC");
@@ -107,7 +113,7 @@ namespace ControlCenter {
 
                             if (Convert.ToBoolean(RC.cachedData["IDC"])) {
                                 GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to extrenal LRM");
-                                string message3 = "name:LinkConnectionRequest;type:external;channelRange:" + RC.cachedData["channelRange"];
+                                string message3 = "name:LinkConnectionRequest;type:external;respond:true;channelRange:" + RC.cachedData["channelRange"];
                                 Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                             } else {
                                 //connectionRequestResponse

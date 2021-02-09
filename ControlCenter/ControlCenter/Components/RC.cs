@@ -17,11 +17,11 @@ namespace ControlCenter {
                 case "NetworkTopology":
                     switch(data["receiver"]) {
                         case "peer":
-                            GUIWindow.PrintLog("RC: Received NetworkTopology() from peer RC");
+                            GUIWindow.PrintLog("RC: Received TopologyQuery() from peer RC");
                             
                             if(data["scenario"].Equals("1")) {
                                 //scenariusz #1
-                                GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
+                                GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
                                 string message2 = "component:RC;name:NetworkTopology;receiver:child;scenario:" + data["scenario"];
                                 Program.parentConnection.SendMessage(message2);
                             } else if (data["scenario"].Equals("2")) {
@@ -40,13 +40,13 @@ namespace ControlCenter {
                                 string channelList2 = "";
                                 foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList2 += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                    channelList2 += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
+                                    channelList2 += connection.GetID() + "=" + string.Join(",", connection.GetSlot()) + "-";
                                 }                                    
                                 linksList2 = linksList2.Remove(linksList2.Length - 2, 2);
                                 channelList2 = channelList2.Remove(channelList2.Length - 1, 1);
                                 //GUIWindow.PrintLog("Channel List: " + channelList2);
 
-                                GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
+                                GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
                                 string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2 + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             }
@@ -54,7 +54,7 @@ namespace ControlCenter {
 
                         case "child":
                             //scenariusz #1, 2 lub 3
-                            GUIWindow.PrintLog("RC: Received NetworkTopology() from parent RC");
+                            GUIWindow.PrintLog("RC: Received TopologyQuery() from parent RC");
                             string routersList = "Routers = ";
                             foreach (Router router in ConfigLoader.myRouters)
                                 routersList += router.GetRouterID() + ", ";
@@ -64,13 +64,13 @@ namespace ControlCenter {
                             string channelList = "";
                             foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                 linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                channelList += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
+                                channelList += connection.GetID() + "=" + string.Join(",", connection.GetSlot()) + "-";
                             }
                             linksList = linksList.Remove(linksList.Length - 2, 2);
                             channelList = channelList.Remove(channelList.Length - 1, 1);
                             //GUIWindow.PrintLog("Channel List: " + channelList);
 
-                            GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + linksList + ") to parent RC");
+                            GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList + linksList + ") to parent RC");
                             string message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
                             Program.childConnection.SendMessage(message1);
                             break;
@@ -81,7 +81,7 @@ namespace ControlCenter {
                 case "NetworkTopologyResponse":
                     switch (data["receiver"]) {
                         case "parent":
-                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["linksList"] + ") from child RC");
+                            GUIWindow.PrintLog("RC: Received TopologyQueryResponse(" + data["routersList"] + data["linksList"] + ") from child RC");
                             if (data["scenario"].Equals("1")) {
                                 //scenariusz #1
                                 string hostList = " Hosts = ";
@@ -98,17 +98,17 @@ namespace ControlCenter {
                                 string channelList = data["channels"] + "-";
                                 foreach (Connection connection in ConfigLoader.myConnections.Values) {
                                     linksList += connection.endPoints.Item1.GetHostID() + "-" + connection.endPoints.Item2.GetHostID() + ", ";
-                                    channelList += connection.GetID() + "=" + string.Join("", connection.GetSlot()) + "-";
+                                    channelList += connection.GetID() + "=" + string.Join(",", connection.GetSlot()) + "-";
                                 }
                                 linksList = linksList.Remove(linksList.Length - 2, 2);
                                 channelList = channelList.Remove(channelList.Length - 1, 1);
 
-                                GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + hostList + linksList + ") to peer RC");
+                                GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList + hostList + linksList + ") to peer RC");
                                 string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             } else if(data["scenario"].Equals("2")) {
                                 //scenariusz #2
-                                GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
+                                GUIWindow.PrintLog("RC: Sent TopologyQuery() to peer RC");
                                 CacheChannels(data["channels"]);
                                 string message = "component:RC;name:NetworkTopology;receiver:peer;routersList:" + data["routersList"] + ";linksList:" + data["linksList"] + ";scenario:" + data["scenario"];
                                 Program.peerConnection.SendMessage(message);
@@ -122,7 +122,7 @@ namespace ControlCenter {
                             break;
 
                         case "peer":
-                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
+                            GUIWindow.PrintLog("RC: Received TopologyQueryResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
                             if (data["scenario"].Equals("1")) {
                                 //koniec scenariusza #1
                                 cachedData.Add("peerConnID", data["connID"]);
@@ -153,7 +153,7 @@ namespace ControlCenter {
                         if(Convert.ToBoolean(data["IDC"])) {
                             //scenariusz #1
                             string message = "component:RC;name:NetworkTopology;receiver:peer;scenario:1";
-                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
+                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to peer RC");
                             Program.peerConnection.SendMessage(message);
                         } else {
                             //scenariusz #4
@@ -164,13 +164,13 @@ namespace ControlCenter {
                         if (Convert.ToBoolean(data["IDC"])) {
                             //scenariusz #2
                             string message = "component:RC;name:NetworkTopology;receiver:child;scenario:2";
-                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
+                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
                             Program.parentConnection.SendMessage(message);
                         }
                         else {
                             //scenariusz #3
                             string message = "component:RC;name:NetworkTopology;receiver:child;scenario:3";
-                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
+                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
                             Program.parentConnection.SendMessage(message);
                         }
                     }
@@ -203,9 +203,10 @@ namespace ControlCenter {
         }
 
         private int[] stringToIntArray(string data) {
-            int[] parsedData = new int[data.Length];
-            for(int i=0; i<data.Length; i++) {
-                parsedData[i] = Convert.ToInt32(data[i] + "");
+            string[] channels = data.Split(',');
+            int[] parsedData = new int[channels.Length];
+            for(int i=0; i< channels.Length; i++) {
+                parsedData[i] = Convert.ToInt32(channels[i] + "");
             }
             return parsedData;
         }
