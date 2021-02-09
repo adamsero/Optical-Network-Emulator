@@ -226,6 +226,12 @@ namespace ClientNode {
             SendOutPacket();
         }
 
+        public static void SetDestinationValue(string val) {
+            instance.Destination.Invoke((MethodInvoker)delegate {
+                instance.Destination.Text = val;
+            });
+        }
+
         private void Throughput_SelectedIndexChanged(object sender, EventArgs e) {
 
         }

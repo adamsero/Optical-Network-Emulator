@@ -53,7 +53,7 @@ namespace Cloud {
                     continue;
                 }
 
-                GUIWindow.PrintLog("Received message from " + frame.SourceIP + ":" + frame.SourcePort);
+                GUIWindow.PrintLog("Received message from " + frame.SourceIP.Split('/')[0] + ":" + frame.SourcePort);
 
                 RedirectFrame(frame.SourceIP.Split('/')[0], frame.SourcePort, frame); 
             }

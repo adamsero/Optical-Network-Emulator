@@ -16,7 +16,8 @@ namespace ClientNode {
         private static StreamReader reader;
         private static StreamWriter writer;
         public int connectionID = 0;
-        private String lastTargetHostName = null;
+        public String lastTargetHostName = null;
+        public static string cachedDestination;
 
         public CPCC() {
             try {
@@ -59,6 +60,7 @@ namespace ClientNode {
                                     //zapisujemy ID i pozwalamy wysylac wiadomosci
                                     GUIWindow.UnlockSendingMessages();
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
+                                    connectionID = Convert.ToInt32(data["connectionID"]);
                                 } else {
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
                                     lastTargetHostName = null;
@@ -75,10 +77,7 @@ namespace ClientNode {
                                                              MessageBoxIcon.Question);
 
                                 if(dialogresult == DialogResult.Yes) {
-
-                                    GUIWindow.ManageCallButton(false);
-                                    GUIWindow.ManageMessageBox(true);
-                                    GUIWindow.ManageSendButton(true);
+                                    cachedDestination = data["routerX"];
                                     SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], true);
                                 } else if(dialogresult == DialogResult.No) {
                                     SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], false);
@@ -91,6 +90,23 @@ namespace ClientNode {
                                 GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCCResponse(" + data["conectionID"] + ") to NCC : OK");
                                 message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID;
                                 SendMessage(message);
+                                break;
+
+                            case "CallConfirmation":
+                                if (!Convert.ToBoolean(data["succeeded"])) {
+                                    GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: false) from NCC");
+                                }
+                                else {
+                                    GUIWindow.ManageCallButton(false);
+                                    GUIWindow.ManageMessageBox(true);
+                                    GUIWindow.ManageSendButton(true);
+                                    connectionID = Convert.ToInt32(data["connID"]);
+                                    GUIWindow.SetDestinationValue(cachedDestination);
+                                    GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") from NCC");
+                                }
+
+                                GUIWindow.PrintLog("CPCC: Sent CallConfirmationResponse() to NCC");
+                                SendMessage("component:NCC;name:CallConfirmationResponse;sender:CPCC;IDC:" + data["IDC"]);
                                 break;
                         }
                         break;

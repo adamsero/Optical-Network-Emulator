@@ -252,6 +252,19 @@ namespace ControlCenter {
             return null;
         }
 
+        public static Host FindHostAmongAll(int id) {
+            foreach (Host host in myHosts) {
+                if (host.GetHostID() == id)
+                    return host;
+            }
+
+            foreach (Host host in otherHosts) {
+                if (host.GetHostID() == id)
+                    return host;
+            }
+            return null;
+        }
+
         public static Router FindRouterByID(int id) {
             foreach (Router router in myRouters) {
                 if (router.GetHostID() == id)

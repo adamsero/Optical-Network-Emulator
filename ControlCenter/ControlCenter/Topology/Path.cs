@@ -12,6 +12,7 @@ namespace ControlCenter {
         public Tuple<Host, Host> endPoints;
         private int length = 0;
         public bool throughSN;
+        public string channelRange;
 
         public Path(List<int> routersList, Host initial, Host final) {
             int[] routers = routersList.ToArray();

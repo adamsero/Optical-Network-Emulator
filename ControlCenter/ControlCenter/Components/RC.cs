@@ -10,7 +10,7 @@ namespace ControlCenter {
         public static readonly Dictionary<string, string> cachedData = new Dictionary<string, string>();
         public static Dictionary<int, int[]> cachedChannels = new Dictionary<int, int[]>();
         public static Path currentPath;
-        public static int currentConnectionID = 1;
+        public static int currentConnectionID = 0;
 
         public void HandleRequest(Dictionary<string, string> data) {
             switch (data["name"]) {
@@ -175,6 +175,17 @@ namespace ControlCenter {
                         }
                     }
                     break;
+
+                case "SendConnectionTables":
+                    GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") from CC");
+                    GUIWindow.PrintLog("RC: Sending connection tables to Routers");
+                    currentConnectionID = Convert.ToInt32(data["connID"]);
+                    UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, false, false);
+                    UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, true, false);
+
+                    GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC");
+                    Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:SendConnectionTablesResponse"));
+                    break;
             }
         }
 
@@ -182,7 +193,11 @@ namespace ControlCenter {
             string[] pieces = data.Split('-');
             foreach(string link in pieces) {
                 string[] keyAndValue = link.Split('=');
-                cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
+                try {
+                    cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
+                } catch(Exception) {
+                    cachedChannels[Convert.ToInt32(keyAndValue[0])] = stringToIntArray(keyAndValue[1]);
+                }
             }
 
         }
@@ -197,9 +212,17 @@ namespace ControlCenter {
 
         private void LoadMyChannels() {
             foreach (Connection conn in ConfigLoader.myConnections.Values) {
-                cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                try {
+                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                } catch (Exception) {
+                    cachedChannels[conn.GetID()] = conn.GetSlot();
+                }
             }
-            cachedChannels.Add(8, ConfigLoader.connections[8].GetSlot());
+            try {
+                cachedChannels.Add(8, ConfigLoader.connections[8].GetSlot());
+            } catch(Exception) {
+                cachedChannels[8] = ConfigLoader.connections[8].GetSlot();
+            }
         }
 
         private void CalculateAllPaths() {
@@ -216,6 +239,8 @@ namespace ControlCenter {
             List<Path> paths = Algorithms.AllPaths(startHost, endingHost);
             if(paths == null || paths.Count == 0) {
                 //nie istnieje żadna ścieżka
+                GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(null) to CC");
+                Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:RouteTableQueryResponse;path:null"));
                 return;
             }
 
@@ -223,11 +248,16 @@ namespace ControlCenter {
             foreach (Path path in paths) {
                 int[] pathsID = path.getEdges();
                 int n = DetermineGapNo(speed, path.GetLength());
+                //GUIWindow.PrintLog("Channel count: " + n);
                 int[,] LRMarray = GetLRMarray(pathsID);
                 int[] indexFromTo = EvaluatePath(n, LRMarray);
-                cachedData.Add("channelRange", indexFromTo[0] + "-" + indexFromTo[1]);
                 if (indexFromTo[0] != -1 && indexFromTo[1] != -1) {
                     //GUIWindow.PrintLog("Test: n: " + n + " index from: " + indexFromTo[0] + " to " + indexFromTo[1]);
+                    try {
+                        cachedData.Add("channelRange", indexFromTo[0] + "-" + indexFromTo[1]);
+                    } catch(Exception) {
+                        cachedData["channelRange"] = indexFromTo[0] + "-" + indexFromTo[1];
+                    }
                     chosenPath = path;
                     break;
                 }
@@ -235,9 +265,12 @@ namespace ControlCenter {
             currentPath = chosenPath;
 
             //GUIWindow.PrintLog("Path from Router" + startingNode.GetRouterID() + " to Router" + endingNode.GetRouterID() + " at " + speed + " Gb/s");
-            if(chosenPath != null) {
-                SendTablesToOwnRouters();
+            if(chosenPath == null) {
+                GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(null) to CC");
+                Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:RouteTableQueryResponse;path:null"));
+                return;
             }
+            SendTablesToOwnRouters();
 
             int nextConnectionID = currentConnectionID + 1;
             if(Convert.ToBoolean(cachedData["IDC"])) {

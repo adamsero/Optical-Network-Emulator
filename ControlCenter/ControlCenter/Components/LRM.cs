@@ -65,7 +65,7 @@ namespace ControlCenter.Components {
                         case "internal":
                             GUIWindow.PrintLog("Internal LRM: Received LinkConnectionRequest(" + data["channelRange"] + ") from CC");
                             string[] range = data["channelRange"].Split('-');
-                            foreach(Connection connection in RC.currentPath.edges) {
+                            foreach(Connection connection in (RC.currentPath == null ? Program.cc.cachedPath.edges : RC.currentPath.edges)) {
                                 if (!ConfigLoader.myConnections.ContainsValue(connection))
                                     continue;
 
@@ -74,8 +74,9 @@ namespace ControlCenter.Components {
                                 }
                                 //GUIWindow.PrintLog("Edge #" + connection.GetID() + ": " + string.Join("", connection.slot));
                             }
+                            GUIWindow.UpdateChannelTable();
                             GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionRequestResponse() to CC");
-                            Program.cc.HandleRequest(Util.DecodeRequest("name:LinkConnectionRequestResponse;type:internal"));
+                            Program.cc.HandleRequest(Util.DecodeRequest("name:LinkConnectionRequestResponse;type:internal;asType:" + data["asType"]));
                             break;
 
                         case "external":

@@ -35,21 +35,30 @@ namespace ControlCenter {
 
         private void RecieveMessages() {
 
-            while (true) {
-                string message = reader.ReadLine();
-                string[] pieces = message.Split(';');
-                Dictionary<string, string> data = new Dictionary<string, string>();
-                foreach (string piece in pieces) {
-                    string[] keyAndValue = piece.Split(':');
-                    data.Add(keyAndValue[0], keyAndValue[1]);
-                }
+            try {
+                while (true) {
+                    string message = reader.ReadLine();
+                    string[] pieces = message.Split(';');
+                    Dictionary<string, string> data = new Dictionary<string, string>();
+                    foreach (string piece in pieces) {
+                        string[] keyAndValue = piece.Split(':');
+                        data.Add(keyAndValue[0], keyAndValue[1]);
+                    }
 
-                switch (data["component"]) {
-                    case "RC":
-                        Program.rc.HandleRequest(data);
-                        break;
-                }
+                    switch (data["component"]) {
+                        case "RC":
+                            Program.rc.HandleRequest(data);
+                            break;
 
+                        case "CC":
+                            Program.cc.HandleRequest(data);
+                            break;
+                    }
+
+                }
+            } catch (Exception e) {
+                GUIWindow.PrintLog(e.Message);
+                GUIWindow.PrintLog(e.StackTrace);
             }
         }
     }

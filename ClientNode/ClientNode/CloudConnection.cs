@@ -54,6 +54,7 @@ namespace ClientNode
                     }
 
                     Frame frame = (Frame)DeserializeObject(receivedBuffer);
+                    Program.cpcc.connectionID = frame.ConnectionID;
 
                     GUIWindow.PrintLog(GetMessageFromFrame(frame));
                 } catch (IOException ex) {
@@ -63,7 +64,7 @@ namespace ClientNode
         }
 
         private string GetMessageFromFrame(Frame frame) {
-            return "Message " + "\"" + frame.Message + "\"" + " received from " + frame.OriginIP + ":" + frame.OriginPort;
+            return "Message " + "\"" + frame.Message + "\"" + " received from " + CPCC.cachedDestination;
         }
 
         private void SendRegistrationRequest() {

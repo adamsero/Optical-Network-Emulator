@@ -51,27 +51,32 @@ namespace ControlCenter {
 
         private void RecieveMessages() {
 
-            while (true) {
-                string message = reader.ReadLine();
-                Dictionary<string, string> data = Util.DecodeRequest(message);
+            try {
+                while (true) {
+                    string message = reader.ReadLine();
+                    Dictionary<string, string> data = Util.DecodeRequest(message);
 
-                switch (data["component"]) {
-                    case "NCC":
-                        ncc.HandleRequest(data, null);
-                        break;
+                    switch (data["component"]) {
+                        case "NCC":
+                            ncc.HandleRequest(data, null);
+                            break;
 
-                    case "RC":
-                        Program.rc.HandleRequest(data);
-                        break;
-                    
-                    case "LRM":
-                        Program.lrm.HandleRequest(data);
-                        break;
+                        case "RC":
+                            Program.rc.HandleRequest(data);
+                            break;
 
-                    case "CC":
-                        Program.cc.HandleRequest(data);
-                        break;
+                        case "LRM":
+                            Program.lrm.HandleRequest(data);
+                            break;
+
+                        case "CC":
+                            Program.cc.HandleRequest(data);
+                            break;
+                    }
                 }
+            } catch(Exception e) {
+                GUIWindow.PrintLog(e.Message);
+                GUIWindow.PrintLog(e.StackTrace);
             }
         }
     }
