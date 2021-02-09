@@ -16,6 +16,8 @@ namespace ControlCenter {
         private int lastSpeed;
         private bool lastIDC;
         public static Dictionary<int, Call> callRegister = new Dictionary<int, Call>();
+        private HostConnection cachedHostYConnection;
+        private bool cachedSuccess;
 
         public NCC() {
             directory.Add("Host1", new Tuple<string, int>("10.0.1.1", 1));
@@ -60,6 +62,7 @@ namespace ControlCenter {
                             HostConnection hostConnection1 = Server.GetHostConnectionByIP(hostYIP1);
                             string message1 = "component:CPCC;name:CallAccept;routerX:" + data["hostX"] + ";routerY:" + data["hostY"] + ";speed:" + data["speed"];
                             hostConnection1.SendMessage(message1);
+                            cachedHostYConnection = hostConnection1;
                             GUIWindow.PrintLog("NCC: Sent CallAccept(" + data["hostX"] + ", " + data["hostY"] + ", " + data["speed"] + " Gb/s) to other NCC");
                             break;
                         }
@@ -80,6 +83,7 @@ namespace ControlCenter {
                         HandlePolicy();
                         string hostYIP = data["routerY"].Remove(data["routerY"].Length - 1, 1) + "2";
                         HostConnection hostConnection = Server.GetHostConnectionByIP(hostYIP);
+                        cachedHostYConnection = hostConnection;
                         message = "component:CPCC;name:CallAccept;routerX:" + routerData.Item1 + ";routerY:" + routerData.Item2 + ";speed:" + data["speed"];
                         hostConnection.SendMessage(message);
                         GUIWindow.PrintLog("NCC: Sent CallAccept(" + routerData.Item1 + ", " + routerData.Item2 + ", " + data["speed"] + " Gb/s) to other NCC");
@@ -187,16 +191,76 @@ namespace ControlCenter {
                         callRegister[Int32.Parse(data["connectionID"])].GetStartHostConnection().SendMessage(message);
                         break;
 
+                    case "CallConfirmation":
+                        if (!Convert.ToBoolean(data["succeeded"])) {
+                            GUIWindow.PrintLog("NCC: Received CallConfirmation(SUCCEEDED: false) from other NCC");
+                            GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: false) to CPCC");
+                            cachedHostYConnection.SendMessage("component:CPCC;name:CallConfirmation;IDC:" + data["IDC"] +";succeeded:false");
+                        }
+                        else {
+                            GUIWindow.PrintLog("NCC: Received CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") from other NCC");
+                            GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") to CPCC");
+                            cachedHostYConnection.SendMessage("component:CPCC;name:CallConfirmation;IDC:" + data["IDC"] + ";succeeded:true;connID:" + data["connID"]);
+                        }
+                        break;
+
+                    case "CallConfirmationResponse":
+                        switch(data["sender"]) {
+                            case "CPCC":
+                                GUIWindow.PrintLog("NCC: Received CallConfirmationResponse() from CPCC");
+                                if (Convert.ToBoolean(data["IDC"])) {
+                                    GUIWindow.PrintLog("NCC: Sent CallConfirmationResponse() to other NCC");
+                                    Program.peerConnection.SendMessage("component:NCC;name:CallConfirmationResponse;sender:NCC");
+                                } else {
+                                    if (!cachedSuccess) {
+                                        GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: false) to CPCC");
+                                        lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:false");
+                                    }
+                                    else {
+                                        GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: true, connectionID: " + RC.currentConnectionID + ") to CPCC");
+                                        lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:" + RC.currentConnectionID);
+                                    }
+                                }
+                                break;
+
+                            case "NCC":
+                                GUIWindow.PrintLog("NCC: Received CallConfirmationResponse() from other NCC");
+                                if (!cachedSuccess) {
+                                    GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: false) to CPCC");
+                                    lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:false");
+                                }
+                                else {
+                                    GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: true, connectionID: " + RC.currentConnectionID + ") to CPCC");
+                                    lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:" + RC.currentConnectionID);
+                                }
+                                break;
+                        }
+                        break;
+
                     case "ConnectionRequestResponse":
-                        if(!Convert.ToBoolean(data["succeeded"])) {
-                            GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: false) from CC");
-                            GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: false) to CPCC");
-                            lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:false");
+                        cachedSuccess = Convert.ToBoolean(data["succeeded"]);
+                        if(lastIDC) {
+                            if (!Convert.ToBoolean(data["succeeded"])) {
+                                GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: false) from CC");
+                                GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: false) to other NCC");
+                                Program.peerConnection.SendMessage("component:NCC;name:CallConfirmation;IDC:true;succeeded:false");
+                            }
+                            else {
+                                GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") from CC");
+                                GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") to other NCC");
+                                Program.peerConnection.SendMessage("component:NCC;name:CallConfirmation;IDC:true;succeeded:true;connID:" + data["connID"]);
+                            }
                         } else {
-                            GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") from CC");
-                            GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") to CPCC");
-                            GUIWindow.UpdateChannelTable();
-                            lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:" + data["connID"]);
+                            if (!Convert.ToBoolean(data["succeeded"])) {
+                                GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: false) from CC");
+                                GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: false) to CPCC");
+                                cachedHostYConnection.SendMessage("component:CPCC;name:CallConfirmation;succeeded:false;IDC:false");
+                            }
+                            else {
+                                GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") from CC");
+                                GUIWindow.PrintLog("NCC: Sent CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") to CPCC");
+                                cachedHostYConnection.SendMessage("component:CPCC;name:CallConfirmation;succeeded:true;IDC:false;connID:" + data["connID"]);
+                            }
                         }
                         break;
                 }
@@ -208,7 +272,7 @@ namespace ControlCenter {
 
         private void ConnectionRequest(bool interDomainConnection) {
             GUIWindow.PrintLog("NCC: Sent ConnectionRequest(" + lastRouterXIP + ", " + lastRouterYIP + ", " + lastSpeed + " Gb/s, InterDomainConnection: " + interDomainConnection + ") to CC");
-            string message = "name:ConnectionRequest;routerX:" + lastRouterXIP + ";routerY:" + lastRouterYIP + ";speed:" + lastSpeed + ";IDC:" + interDomainConnection.ToString();
+            string message = "name:ConnectionRequest;routerX:" + lastRouterXIP + ";routerY:" + lastRouterYIP + ";speed:" + lastSpeed + ";IDC:" + interDomainConnection.ToString() + ";layer:upper";
             Program.cc.HandleRequest(Util.DecodeRequest(message));
         }
 

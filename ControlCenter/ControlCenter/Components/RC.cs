@@ -193,7 +193,11 @@ namespace ControlCenter {
             string[] pieces = data.Split('-');
             foreach(string link in pieces) {
                 string[] keyAndValue = link.Split('=');
-                cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
+                try {
+                    cachedChannels.Add(Convert.ToInt32(keyAndValue[0]), stringToIntArray(keyAndValue[1]));
+                } catch(Exception) {
+                    cachedChannels[Convert.ToInt32(keyAndValue[0])] = stringToIntArray(keyAndValue[1]);
+                }
             }
 
         }
@@ -208,9 +212,17 @@ namespace ControlCenter {
 
         private void LoadMyChannels() {
             foreach (Connection conn in ConfigLoader.myConnections.Values) {
-                cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                try {
+                    cachedChannels.Add(conn.GetID(), conn.GetSlot());
+                } catch (Exception) {
+                    cachedChannels[conn.GetID()] = conn.GetSlot();
+                }
             }
-            cachedChannels.Add(8, ConfigLoader.connections[8].GetSlot());
+            try {
+                cachedChannels.Add(8, ConfigLoader.connections[8].GetSlot());
+            } catch(Exception) {
+                cachedChannels[8] = ConfigLoader.connections[8].GetSlot();
+            }
         }
 
         private void CalculateAllPaths() {
@@ -236,11 +248,16 @@ namespace ControlCenter {
             foreach (Path path in paths) {
                 int[] pathsID = path.getEdges();
                 int n = DetermineGapNo(speed, path.GetLength());
+                //GUIWindow.PrintLog("Channel count: " + n);
                 int[,] LRMarray = GetLRMarray(pathsID);
                 int[] indexFromTo = EvaluatePath(n, LRMarray);
-                cachedData.Add("channelRange", indexFromTo[0] + "-" + indexFromTo[1]);
                 if (indexFromTo[0] != -1 && indexFromTo[1] != -1) {
                     //GUIWindow.PrintLog("Test: n: " + n + " index from: " + indexFromTo[0] + " to " + indexFromTo[1]);
+                    try {
+                        cachedData.Add("channelRange", indexFromTo[0] + "-" + indexFromTo[1]);
+                    } catch(Exception) {
+                        cachedData["channelRange"] = indexFromTo[0] + "-" + indexFromTo[1];
+                    }
                     chosenPath = path;
                     break;
                 }

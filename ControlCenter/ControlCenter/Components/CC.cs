@@ -8,16 +8,54 @@ namespace ControlCenter {
     class CC {
 
         public Path cachedPath;
+        private string cachedMessage;
+        private int cachedScenario;
 
         public void HandleRequest(Dictionary<string, string> data) {
-            switch(data["name"]) {
+            switch (data["name"]) {
                 case "ConnectionRequest":
-                    GUIWindow.PrintLog("CC: Received ConnectionRequest(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s, InterDomainConnection: " + data["IDC"] + ") from NCC");
+                    switch (data["layer"]) {
+                        case "upper":
+                            GUIWindow.PrintLog("CC: Received ConnectionRequest(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s, InterDomainConnection: " + data["IDC"] + ") from NCC");
 
-                    string networkCase = ConfigLoader.ccID == 3 ? "SN" : "FirstAS";
-                    string message = "component:RC;name:RouteTableQuery;routerX:" + data["routerX"] + ";routerY:" + data["routerY"] + ";speed:" + data["speed"] + ";IDC:" + data["IDC"] + ";case:" + networkCase;
-                    GUIWindow.PrintLog("CC: Sent RouteTableQuery(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s, InterDomainConnection: " + data["IDC"] + ") to RC");
-                    Program.rc.HandleRequest(Util.DecodeRequest(message));
+                            string networkCase = ConfigLoader.ccID == 3 ? "SN" : "FirstAS";
+                            string message420 = "component:RC;name:RouteTableQuery;routerX:" + data["routerX"] + ";routerY:" + data["routerY"] + ";speed:" + data["speed"] + ";IDC:" + data["IDC"] + ";case:" + networkCase;
+                            GUIWindow.PrintLog("CC: Sent RouteTableQuery(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s, InterDomainConnection: " + data["IDC"] + ") to RC");
+                            Program.rc.HandleRequest(Util.DecodeRequest(message420));
+                            break;
+
+                        case "lower":
+                            GUIWindow.PrintLog("CC: Received ConnectionRequest(routerX: " + data["routerX"] + ", routerY: " + data["routerY"] + ", path:" + data["path"] + ") from parent CC");
+                            List<int> routerID2 = new List<int>();
+                            foreach (string id in data["path"].Split('-')) {
+                                routerID2.Add(Convert.ToInt32(id));
+                            }
+                            Host hostX2 = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint1"]));
+                            Host hostY2 = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint2"]));
+                            cachedPath = new Path(routerID2, hostX2, hostY2);
+                            cachedPath.channelRange = data["channelRange"];
+                            Tuple<HostConnection, HostConnection> connections2 = GetHostConnections(cachedPath);
+                            Call call2 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections2.Item1, connections2.Item2);
+                            NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call2);
+
+                            GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
+                            Program.rc.HandleRequest(Util.DecodeRequest("name:SendConnectionTables;connID:" + data["connID"] + ";path:" + data["path"]));
+                            break;
+                    }
+                    break;
+
+                case "ConnectionRequestResponse":
+                    GUIWindow.PrintLog("CC: Received ConnectionRequestResponse() from child CC");
+                    if (cachedScenario == 1) {
+                        //scenariusz 1
+                        GUIWindow.PrintLog("CC: Sent PeerCoordinationResponse() to peer CC");
+                        Program.peerConnection.SendMessage("component:CC;name:PeerCoordinationResponse");
+                    } else {
+                        //scenariusz 2
+                        var decoded = Util.DecodeRequest(cachedMessage);
+                        GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + decoded["routerX"] + ", routerY: " + decoded["routerY"] + ", path:" + decoded["path"] + ") to peer CC");
+                        Program.peerConnection.SendMessage(cachedMessage);
+                    }
                     break;
 
                 case "RouteTableQueryResponse":
@@ -37,7 +75,7 @@ namespace ControlCenter {
                     NCC.callRegister.Add(RC.currentConnectionID, call);
 
                     GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to internal LRM");
-                    string message2 = "name:LinkConnectionRequest;type:internal;channelRange:" + RC.cachedData["channelRange"];
+                    string message2 = "name:LinkConnectionRequest;type:internal;channelRange:" + RC.cachedData["channelRange"] + ";asType:first";
                     Program.lrm.HandleRequest(Util.DecodeRequest(message2));
 
                     break;
@@ -46,6 +84,26 @@ namespace ControlCenter {
                     switch (data["type"]) {
                         case "internal":
                             GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from internal LRM");
+
+                            if (data["asType"].Equals("second")) {
+                                if (cachedPath.throughSN && ConfigLoader.ccID == 2) {
+                                    var decoded = Util.DecodeRequest(cachedMessage);
+                                    cachedScenario = 1;
+                                    GUIWindow.PrintLog("CC: Sent ConnectionRequest(routerX: " + decoded["routerX"] + ", routerY: " + decoded["routerY"] + ", path:" + decoded["path"] + ") to child CC");
+                                    Program.parentConnection.SendMessage(cachedMessage);
+                                } else {
+                                    //zwrotka do peera
+                                    GUIWindow.PrintLog("CC: Sent PeerCoordinationResponse() to peer CC");
+                                    Program.peerConnection.SendMessage("component:CC;name:PeerCoordinationResponse");
+                                }
+                                break;
+                            } else if (data["asType"].Equals("SN")) {
+                                //zwrotka do parent CC
+                                GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse() to parent CC");
+                                Program.childConnection.SendMessage("component:CC;name:ConnectionRequestResponse");
+                                break;
+                            }
+
 
                             if (Convert.ToBoolean(RC.cachedData["IDC"])) {
                                 GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to extrenal LRM");
@@ -61,7 +119,6 @@ namespace ControlCenter {
 
                         case "external":
                             GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from external LRM");
-                            //można robić PeerCoordination
                             
                             try {
                                 string listOfRouters= "";
@@ -71,23 +128,35 @@ namespace ControlCenter {
                                 listOfRouters = listOfRouters.Remove(listOfRouters.Length - 1, 1);
 
                                 string message4 = "component:CC;name:PeerCoordination;connID:" + RC.currentConnectionID + ";routerX:" + RC.cachedData["routerX"] + ";routerY:" + RC.cachedData["routerY"]
-                                    + ";routerIDs:" + listOfRouters + ";endPoint1:" + RC.currentPath.endPoints.Item1.GetHostID() + ";" + "endPoint2:" + RC.currentPath.endPoints.Item2.GetHostID() + ";path:" + listOfRouters;
+                                    + ";routerIDs:" + listOfRouters + ";endPoint1:" + RC.currentPath.endPoints.Item1.GetHostID() + ";" + "endPoint2:" + RC.currentPath.endPoints.Item2.GetHostID()
+                                    + ";path:" + listOfRouters + ";channelRange:" + RC.cachedData["channelRange"];
 
-                                GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] +", path:" + listOfRouters + ") to peer CC");
-                                Program.peerConnection.SendMessage(message4);
+                                if(ConfigLoader.ccID == 1) {
+                                    //robimy PeerCoordination
+                                    GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] + ", path:" + listOfRouters + ") to peer CC");
+                                    Program.peerConnection.SendMessage(message4);
+                                } else if (ConfigLoader.ccID == 2) {
+                                    cachedScenario = 2;
+                                    cachedMessage = message4;
+                                    GUIWindow.PrintLog("CC: Sent ConnectionRequest(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] + ", path:" + listOfRouters + ") to child CC");
+                                    Program.parentConnection.SendMessage(message4 + ";layer:lower;actualName:ConnectionRequest");
+                                }
                             }
                             catch (Exception e) {
                                 GUIWindow.PrintLog(e.Message);
                                 GUIWindow.PrintLog(e.StackTrace);
                                 
                             }
-                            //int connectionID, bool interDomainConnection, int startAsID, bool throughSubnetwork , HostConnection startHostConnection, HostConnection targetHostConnection
                             break;
                     }
                     break;
 
                 case "PeerCoordination":
-                    GUIWindow.PrintLog("CC: Received PeerCoordination(routerX: " + data["routerX"] + ", routerY: " + data["routerY"] + ", path:" + data["path"] + ") from peer CC");
+                    try {
+                        GUIWindow.PrintLog("CC: Received " + data["actualName"] +"(routerX: " + data["routerX"] + ", routerY: " + data["routerY"] + ", path:" + data["path"] + ") from parent CC");
+                    } catch(Exception) {
+                        GUIWindow.PrintLog("CC: Received PeerCoordination(routerX: " + data["routerX"] + ", routerY: " + data["routerY"] + ", path:" + data["path"] + ") from peer CC");
+                    }
                     List<int> routerID = new List<int>();
                     foreach(string id in data["path"].Split('-')) {
                         routerID.Add(Convert.ToInt32(id)); 
@@ -95,17 +164,36 @@ namespace ControlCenter {
                     Host hostX = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint1"]));
                     Host hostY = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint2"]));
                     cachedPath = new Path(routerID, hostX, hostY);
+                    cachedPath.channelRange = data["channelRange"];
                     Tuple<HostConnection, HostConnection> connections1 = GetHostConnections(cachedPath);
                     Call call1 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections1.Item1, connections1.Item2);
                     NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call1);
+
+                    cachedMessage = "component:CC;name:ConnectionRequest;layer:lower;connID:" + data["connID"] + ";routerX:" + data["routerX"] + ";routerY:" + data["routerY"]
+                                    + ";routerIDs:" + data["routerIDs"] + ";endPoint1:" + data["endPoint1"] + ";" + "endPoint2:" + data["endPoint2"] + ";path:"
+                                    + data["path"] + ";channelRange:" + data["channelRange"];
 
                     GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
                     Program.rc.HandleRequest(Util.DecodeRequest("name:SendConnectionTables;connID:" + data["connID"] + ";path:" + data["path"]));
 
                     break;
 
+                case "PeerCoordinationResponse":
+                    GUIWindow.PrintLog("CC: Received PeerCoordinationResponse() from peer CC");
+                    GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse() to NCC");
+                    Program.ncc.HandleRequest(Util.DecodeRequest("name:ConnectionRequestResponse;succeeded:true;connID:" + RC.currentConnectionID), null);
+                    break;
+
                 case "SendConnectionTablesResponse":
                     GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC");
+                    try {
+                        GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + cachedPath.channelRange + ") to internal LRM");
+                        string message22 = "name:LinkConnectionRequest;type:internal;channelRange:" + cachedPath.channelRange + ";asType:" + (ConfigLoader.ccID == 3 ? "SN" : "second");
+                        Program.lrm.HandleRequest(Util.DecodeRequest(message22));
+                    } catch(Exception e) {
+                        GUIWindow.PrintLog(e.Message);
+                        GUIWindow.PrintLog(e.StackTrace);
+                    }
 
                     break;
 
@@ -114,8 +202,8 @@ namespace ControlCenter {
                         //CHILD
                         GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from Parent CC");
                         GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
-                        message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
-                        Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                        string message1 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                        Program.lrm.HandleRequest(Util.DecodeRequest(message1));
                     }
                     else {
                         GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from NCC"); // InterDomainConnection: " + data["IDC"]
@@ -126,13 +214,13 @@ namespace ControlCenter {
 
                         if (interDomainConnectionFlag && asID == ConfigLoader.ccID) {
                             GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
-                            message = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
-                            Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"];
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
                         else {
                             GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
-                            message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
-                            Program.lrm.HandleRequest(Util.DecodeRequest(message));
+                            string message3 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
                     }
                     break;
@@ -140,7 +228,7 @@ namespace ControlCenter {
                 case "LinkConnectionExternalDeallocationResponse":
                     GUIWindow.PrintLog("CC: Received LinkConnectionExternalDeallocation(" + data["connectionID"] + ") from External LRM : OK");
                     GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
-                    message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
+                    string message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                     Program.lrm.HandleRequest(Util.DecodeRequest(message));
                     break;
 
