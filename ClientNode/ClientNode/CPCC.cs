@@ -15,7 +15,7 @@ namespace ClientNode {
         private static NetworkStream stream;
         private static StreamReader reader;
         private static StreamWriter writer;
-        public int connectionID = 0;
+        public static int connectionID = 0;
         public String lastTargetHostName = null;
         public static string cachedDestination;
 
@@ -43,87 +43,99 @@ namespace ClientNode {
         }
 
         private void ReceiveMessages() {
-            while (true) {
-                string message = reader.ReadLine();
-                string[] pieces = message.Split(';');
-                Dictionary<string, string> data = new Dictionary<string, string>();
-                foreach (string piece in pieces) {
-                    string[] keyAndValue = piece.Split(':');
-                    data.Add(keyAndValue[0], keyAndValue[1]);
-                }
+            try {
+                while (true) {
+                    string message = reader.ReadLine();
+                    string[] pieces = message.Split(';');
+                    Dictionary<string, string> data = new Dictionary<string, string>();
+                    foreach (string piece in pieces) {
+                        string[] keyAndValue = piece.Split(':');
+                        data.Add(keyAndValue[0], keyAndValue[1]);
+                    }
 
-                switch (data["component"]) {
-                    case "CPCC":
-                        switch(data["name"]) {
-                            case "CallRequestResponse":
-                                if(Convert.ToBoolean(data["succeeded"])) {
-                                    //zapisujemy ID i pozwalamy wysylac wiadomosci
-                                    GUIWindow.UnlockSendingMessages();
-                                    GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
-                                    connectionID = Convert.ToInt32(data["connectionID"]);
-                                } else {
-                                    GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
-                                    lastTargetHostName = null;
-                                }
-                                break;
-
-                            case "CallAccept":
-                                GUIWindow.PrintLog("CPCC: Received CallAccept(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from NCC");
-
-                                string msg = "Incomming call received from " + data["routerX"] + "\nDo you want to accept it?";
-                                string caption = "Call incoming to " + data["routerY"];
-                                var dialogresult = MessageBox.Show(msg, caption,
-                                                             MessageBoxButtons.YesNo,
-                                                             MessageBoxIcon.Question);
-
-                                if(dialogresult == DialogResult.Yes) {
-                                    cachedDestination = data["routerX"];
-                                    SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], true);
-                                } else if(dialogresult == DialogResult.No) {
-                                    SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], false);
-                                } 
-
-                                break;
-
-                            case "CallTeardownCPCC":
-                                GUIWindow.PrintLog("CPCC: Received CallTeardownCPCC(" + data["conectionID"] + ") from NCC");
-                                GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCCResponse(" + data["conectionID"] + ") to NCC : OK");
-                                message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID;
-                                SendMessage(message);
-                                break;
-
-                            case "CallConfirmation":
-                                if (!Convert.ToBoolean(data["succeeded"])) {
-                                    GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: false) from NCC");
-                                }
-                                else {
-                                    GUIWindow.ManageCallButton(false);
-                                    GUIWindow.ManageMessageBox(true);
-                                    GUIWindow.ManageSendButton(true);
-                                    connectionID = Convert.ToInt32(data["connID"]);
-                                    GUIWindow.SetDestinationValue(cachedDestination);
-                                    GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") from NCC");
-                                }
-
-                                GUIWindow.PrintLog("CPCC: Sent CallConfirmationResponse() to NCC");
-                                SendMessage("component:NCC;name:CallConfirmationResponse;sender:CPCC;IDC:" + data["IDC"]);
-                                break;
-                        }
-                        break;
-
-                    case "NONE":
-                        switch(data["name"]) {
-                            case "RegistrationResponse":
-                                if (Convert.ToBoolean(data["succeeded"])) {
-                                    GUIWindow.PrintLog("Control Center confirmed registration");
-                                } else {
-                                    GUIWindow.PrintLog("Control Center denied registration");
-                                }
+                    switch (data["component"]) {
+                        case "CPCC":
+                            switch (data["name"]) {
+                                case "CallRequestResponse":
+                                    if (Convert.ToBoolean(data["succeeded"])) {
+                                        //zapisujemy ID i pozwalamy wysylac wiadomosci
+                                        GUIWindow.UnlockSendingMessages();
+                                        GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
+                                        connectionID = Convert.ToInt32(data["connectionID"]);
+                                    }
+                                    else {
+                                        GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
+                                        lastTargetHostName = null;
+                                    }
                                     break;
-                        }
-                        break;
+
+                                case "CallAccept":
+                                    GUIWindow.PrintLog("CPCC: Received CallAccept(" + data["routerX"] + ", " + data["routerY"] + ", " + data["speed"] + " Gb/s) from NCC");
+
+                                    string msg = "Incomming call received from " + data["routerX"] + "\nDo you want to accept it?";
+                                    string caption = "Call incoming to " + data["routerY"];
+                                    var dialogresult = MessageBox.Show(msg, caption,
+                                                                 MessageBoxButtons.YesNo,
+                                                                 MessageBoxIcon.Question);
+
+                                    if (dialogresult == DialogResult.Yes) {
+                                        cachedDestination = data["routerX"];
+                                        SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], true);
+                                    }
+                                    else if (dialogresult == DialogResult.No) {
+                                        SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], false);
+                                    }
+
+                                    break;
+
+                                case "CallTeardownCPCC":
+                                    GUIWindow.PrintLog("CPCC: Received CallTeardownCPCC(" + data["connectionID"] + ") from NCC");
+                                    GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCCResponse(" + data["connectionID"] + ") to NCC : OK");
+                                    message = "component:NCC;name:CallTeardownCPCCResponse;connectionID:" + connectionID;
+                                    SendMessage(message);
+                                    GUIWindow.LockSendingMessages();
+                                    GUIWindow.instance.GetToggleButton().Enabled = true;
+                                    break;
+
+                                case "CallConfirmation":
+                                    if (!Convert.ToBoolean(data["succeeded"])) {
+                                        GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: false) from NCC");
+                                    }
+                                    else {
+                                        GUIWindow.ManageCallButton(false);
+                                        GUIWindow.ManageMessageBox(true);
+                                        GUIWindow.ManageSendButton(true);
+                                        connectionID = Convert.ToInt32(data["connID"]);
+                                        GUIWindow.SetDestinationValue(cachedDestination);
+                                        GUIWindow.PrintLog("CPCC: Received CallConfirmation(SUCCEEDED: true, connectionID: " + data["connID"] + ") from NCC");
+                                    }
+
+                                    GUIWindow.PrintLog("CPCC: Sent CallConfirmationResponse() to NCC");
+                                    SendMessage("component:NCC;name:CallConfirmationResponse;sender:CPCC;IDC:" + data["IDC"]);
+                                    break;
+                            }
+                            break;
+
+                        case "NONE":
+                            switch (data["name"]) {
+                                case "RegistrationResponse":
+                                    if (Convert.ToBoolean(data["succeeded"])) {
+                                        GUIWindow.PrintLog("Control Center confirmed registration");
+                                    }
+                                    else {
+                                        GUIWindow.PrintLog("Control Center denied registration");
+                                    }
+                                    break;
+                            }
+                            break;
+                    }
                 }
             }
+            catch (Exception ex) {
+                GUIWindow.PrintLog(ex.StackTrace);
+                GUIWindow.PrintLog(ex.Message);
+            }
+            
         }
 
         private void SendMessage(string message) {
@@ -147,7 +159,8 @@ namespace ClientNode {
         public void SendCallTeardownCPCC(String hostXName, String hostYName, int connectionID) {
             string message = "component:NCC;name:CallTeardownCPCC;hostX:" + hostXName + ";hostY:" + hostYName + ";connectionID:" + connectionID;
             SendMessage(message);
-            GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCC(" + connectionID + ") to NCC");
+            GUIWindow.PrintLog("CPCC: Sent CallTeardownCPCC("+ hostXName +", "+ hostYName +", "+ connectionID + ") to NCC");
+            GUIWindow.LockSendingMessages();
         }
 
         ////TODO: dodac ip w komunikatach przekazywanych do loga np. NCC CallRequest(10.0.0.1, 10.0.0.2)

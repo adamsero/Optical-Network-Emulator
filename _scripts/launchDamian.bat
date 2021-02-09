@@ -61,8 +61,8 @@ for /l %%A in (1, 1, 10) do (
 set /a cloud_pos_x=4*shift_x
 set /a mc_pos_x=5*shift_x
 set /a cc_pos_x1=6*shift_x
-set /a cc_pos_x2=7*shift_x
-set /a cc_pos_x3=8*shift_x
+set /a cc_pos_x2=7*shift_x+50
+set /a cc_pos_x3=8*shift_x+100
 
 start ./cmdow.exe Cloud /mov !cloud_pos_x! 0
 start ./cmdow.exe ManagementCenter /mov !mc_pos_x! 0
