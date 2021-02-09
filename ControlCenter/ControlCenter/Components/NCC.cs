@@ -189,7 +189,14 @@ namespace ControlCenter {
 
                     case "ConnectionRequestResponse":
                         if(!Convert.ToBoolean(data["succeeded"])) {
-
+                            GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: false) from CC");
+                            GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: false) to CPCC");
+                            lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:false");
+                        } else {
+                            GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") from CC");
+                            GUIWindow.PrintLog("NCC: Sent CallRequestResponse(SUCCEEDED: true, connectionID: " + data["connID"] + ") to CPCC");
+                            GUIWindow.UpdateChannelTable();
+                            lastCaller.SendMessage("component:CPCC;name:CallRequestResponse;succeeded:true;connectionID:" + data["connID"]);
                         }
                         break;
                 }

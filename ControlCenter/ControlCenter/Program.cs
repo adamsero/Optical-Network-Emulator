@@ -57,6 +57,7 @@ namespace ControlCenter {
                         } else {
                             childConnection = new ChildConnection(new TcpClient("localhost", 12500), ncc);
                         }
+                        GUIWindow.UpdateChannelTable();
                     }
                     catch (Exception e) {
                         GUIWindow.PrintLog(e.StackTrace);

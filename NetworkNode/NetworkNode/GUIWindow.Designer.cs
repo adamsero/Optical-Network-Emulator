@@ -148,7 +148,7 @@
             this.ownIP.Font = new System.Drawing.Font("Roboto Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.ownIP.Location = new System.Drawing.Point(137, 14);
             this.ownIP.Name = "ownIP";
-            this.ownIP.Size = new System.Drawing.Size(136, 24);
+            this.ownIP.Size = new System.Drawing.Size(125, 24);
             this.ownIP.TabIndex = 16;
             this.ownIP.Text = "255.255.255.255";
             this.ownIP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;

@@ -54,6 +54,7 @@ namespace ClientNode
                     }
 
                     Frame frame = (Frame)DeserializeObject(receivedBuffer);
+                    Program.cpcc.connectionID = frame.ConnectionID;
 
                     GUIWindow.PrintLog(GetMessageFromFrame(frame));
                 } catch (IOException ex) {

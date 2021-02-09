@@ -28,21 +28,21 @@ namespace ControlCenter {
             ChannelTable.Refresh();
 
             ChannelTable.ColumnCount = 2;
-            ChannelTable.Columns[0].Name = "Connection ID";
+            ChannelTable.Columns[0].Name = "Conn ID";
             ChannelTable.Columns[1].Name = "EON Channels 12.5GHz";
 
-            //foreach (DataGridViewColumn column in ChannelTable.Columns) {
-            //    column.Width = ChannelTable.Size.Width / 2;
-            //}
-            ChannelTable.Columns[0].Width = 88;
+            ChannelTable.Columns[0].Width = 50;
             ChannelTable.Columns[1].Width = 700;
+
+            ChannelTable.Columns[0].DefaultCellStyle.Font = new Font("Roboto", 11, GraphicsUnit.Pixel);
+            ChannelTable.Columns[1].DefaultCellStyle.Font = new Font("Roboto", 11, GraphicsUnit.Pixel);
         }
 
         public static void UpdateChannelTable() {
             instance.ChannelTable.Invoke((MethodInvoker)delegate {
                 instance.ChannelTable.Rows.Clear();
                 instance.ChannelTable.Refresh();
-                foreach (int key in ConfigLoader.connections.Keys) {
+                foreach (int key in ConfigLoader.myConnections.Keys) {
                     ConfigLoader.connections.TryGetValue(key, out Connection conn);
                     string result = string.Join("", conn.slot);
                     instance.ChannelTable.Rows.Add(new string[] { key.ToString(), result });

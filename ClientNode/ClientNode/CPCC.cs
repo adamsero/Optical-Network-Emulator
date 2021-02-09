@@ -16,7 +16,7 @@ namespace ClientNode {
         private static StreamReader reader;
         private static StreamWriter writer;
         public int connectionID = 0;
-        private String lastTargetHostName = null;
+        public String lastTargetHostName = null;
 
         public CPCC() {
             try {
@@ -59,6 +59,7 @@ namespace ClientNode {
                                     //zapisujemy ID i pozwalamy wysylac wiadomosci
                                     GUIWindow.UnlockSendingMessages();
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(SUCCESSFUL, connectionID = " + data["connectionID"] + ") from NCC");
+                                    connectionID = Convert.ToInt32(data["connectionID"]);
                                 } else {
                                     GUIWindow.PrintLog("CPCC: Received CallRequestResponse(UNSUCCESSFUL) from NCC");
                                     lastTargetHostName = null;
@@ -79,6 +80,7 @@ namespace ClientNode {
                                     GUIWindow.ManageCallButton(false);
                                     GUIWindow.ManageMessageBox(true);
                                     GUIWindow.ManageSendButton(true);
+                                    GUIWindow.SetDestinationValue(data["routerX"]);
                                     SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], true);
                                 } else if(dialogresult == DialogResult.No) {
                                     SendCallAcceptResponse(data["routerX"], data["routerY"], data["speed"], false);

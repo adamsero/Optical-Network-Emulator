@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 namespace ControlCenter {
     class CC {
 
+        public Path cachedPath;
+
         public void HandleRequest(Dictionary<string, string> data) {
             switch(data["name"]) {
                 case "ConnectionRequest":
@@ -23,7 +25,7 @@ namespace ControlCenter {
                     if (data["path"].Equals("null")) {
                         GUIWindow.PrintLog("CC: Requested connection could not be established");
                         string message1 = "component:CC;name:ConnectionRequestResponse;succeeded:false";
-                        GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(false) to NCC");
+                        GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(SUCCEEDED: false) to NCC");
                         Program.ncc.HandleRequest(Util.DecodeRequest(message1), null);
                         break;
                     }
@@ -50,10 +52,10 @@ namespace ControlCenter {
                                 string message3 = "name:LinkConnectionRequest;type:external;channelRange:" + RC.cachedData["channelRange"];
                                 Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                             } else {
-
                                 //connectionRequestResponse
-                                
-                                
+                                string message1 = "component:CC;name:ConnectionRequestResponse;succeeded:true;connID:" + RC.currentConnectionID;
+                                GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(SUCCEEDED: true, connectionID: " + RC.currentConnectionID + ") to NCC");
+                                Program.ncc.HandleRequest(Util.DecodeRequest(message1), null);
                             }
                             break;
 
@@ -62,21 +64,17 @@ namespace ControlCenter {
                             //można robić PeerCoordination
                             
                             try {
-
                                 string listOfRouters= "";
                                 foreach (int router in RC.currentPath.routerIDs) {
-                                    listOfRouters +=router+"-";
-
+                                    listOfRouters += router + "-";
                                 }
-                                string message4 = "component:CC;name:PeerCoordination;connectionID:" + RC.currentConnectionID + ";routerX:" + RC.cachedData["routerX"] + ";routerY:" + RC.cachedData["routerY"] 
-                                    + ";routerIDs:" + listOfRouters + ";endPoint1:" + RC.currentPath.endPoints.Item1.GetHostID()+";"+ "endPoint2:" + RC.currentPath.endPoints.Item2.GetHostID() + ";";
+                                listOfRouters = listOfRouters.Remove(listOfRouters.Length - 1, 1);
 
-                                GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] +", path:" + listOfRouters + ") to external CC");
-                                if (Program.parentConnection == null)
-                                    GUIWindow.PrintLog("null");
+                                string message4 = "component:CC;name:PeerCoordination;connID:" + RC.currentConnectionID + ";routerX:" + RC.cachedData["routerX"] + ";routerY:" + RC.cachedData["routerY"]
+                                    + ";routerIDs:" + listOfRouters + ";endPoint1:" + RC.currentPath.endPoints.Item1.GetHostID() + ";" + "endPoint2:" + RC.currentPath.endPoints.Item2.GetHostID() + ";path:" + listOfRouters;
+
+                                GUIWindow.PrintLog("CC: Sent PeerCoordination(routerX: " + RC.cachedData["routerX"] + ", routerY: " + RC.cachedData["routerY"] +", path:" + listOfRouters + ") to peer CC");
                                 Program.peerConnection.SendMessage(message4);
-                                
-
                             }
                             catch (Exception e) {
                                 GUIWindow.PrintLog(e.Message);
@@ -89,7 +87,25 @@ namespace ControlCenter {
                     break;
 
                 case "PeerCoordination":
+                    GUIWindow.PrintLog("CC: Received PeerCoordination(routerX: " + data["routerX"] + ", routerY: " + data["routerY"] + ", path:" + data["path"] + ") from peer CC");
+                    List<int> routerID = new List<int>();
+                    foreach(string id in data["path"].Split('-')) {
+                        routerID.Add(Convert.ToInt32(id)); 
+                    }
+                    Host hostX = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint1"]));
+                    Host hostY = ConfigLoader.FindHostAmongAll(Convert.ToInt32(data["endPoint2"]));
+                    cachedPath = new Path(routerID, hostX, hostY);
+                    Tuple<HostConnection, HostConnection> connections1 = GetHostConnections(cachedPath);
+                    Call call1 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections1.Item1, connections1.Item2);
+                    NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call1);
 
+                    GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
+                    Program.rc.HandleRequest(Util.DecodeRequest("name:SendConnectionTables;connID:" + data["connID"] + ";path:" + data["path"]));
+
+                    break;
+
+                case "SendConnectionTablesResponse":
+                    GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC");
 
                     break;
 

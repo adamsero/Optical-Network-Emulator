@@ -10,7 +10,7 @@ namespace ControlCenter {
         public static readonly Dictionary<string, string> cachedData = new Dictionary<string, string>();
         public static Dictionary<int, int[]> cachedChannels = new Dictionary<int, int[]>();
         public static Path currentPath;
-        public static int currentConnectionID = 1;
+        public static int currentConnectionID = 0;
 
         public void HandleRequest(Dictionary<string, string> data) {
             switch (data["name"]) {
@@ -175,6 +175,17 @@ namespace ControlCenter {
                         }
                     }
                     break;
+
+                case "SendConnectionTables":
+                    GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") from CC");
+                    GUIWindow.PrintLog("RC: Sending connection tables to Routers");
+                    currentConnectionID = Convert.ToInt32(data["connID"]);
+                    UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, false, false);
+                    UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, true, false);
+
+                    GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC");
+                    Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:SendConnectionTablesResponse"));
+                    break;
             }
         }
 
@@ -216,6 +227,8 @@ namespace ControlCenter {
             List<Path> paths = Algorithms.AllPaths(startHost, endingHost);
             if(paths == null || paths.Count == 0) {
                 //nie istnieje żadna ścieżka
+                GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(null) to CC");
+                Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:RouteTableQueryResponse;path:null"));
                 return;
             }
 
@@ -235,9 +248,12 @@ namespace ControlCenter {
             currentPath = chosenPath;
 
             //GUIWindow.PrintLog("Path from Router" + startingNode.GetRouterID() + " to Router" + endingNode.GetRouterID() + " at " + speed + " Gb/s");
-            if(chosenPath != null) {
-                SendTablesToOwnRouters();
+            if(chosenPath == null) {
+                GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(null) to CC");
+                Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:RouteTableQueryResponse;path:null"));
+                return;
             }
+            SendTablesToOwnRouters();
 
             int nextConnectionID = currentConnectionID + 1;
             if(Convert.ToBoolean(cachedData["IDC"])) {
