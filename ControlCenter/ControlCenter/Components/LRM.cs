@@ -80,10 +80,10 @@ namespace ControlCenter.Components {
                             }
                         }
 
-                        GUIWindow.PrintLog("External LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
-                        GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from External LRM : DEALLOCATED");
-                        GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to External LRM : OK");
-                        GUIWindow.PrintLog("External LRM: Received LocalTopologyResponse() from RC : OK");
+                        GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
+                        GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM : DEALLOCATED");
+                        GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
+                        GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
                     }
                     GUIWindow.UpdateChannelTable();
 

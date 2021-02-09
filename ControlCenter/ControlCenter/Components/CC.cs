@@ -230,17 +230,15 @@ namespace ControlCenter {
                             string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"] + ";deleteChannels:true";
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
-                        else {
-
-                            GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
-                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"] + ";deleteChannels:false";
-                            Program.lrm.HandleRequest(Util.DecodeRequest(message3));
-
-                            /*
+                        else if (!interDomainConnectionFlag) {
                             GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                             string message3 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
-                            */
+                        }
+                        else { 
+                            GUIWindow.PrintLog("CC: Sent LinkConnectionExternalDeallocation(" + data["connectionID"] + ") to External LRM");
+                            string message3 = "component:LRM;name:LinkConnectionExternalDeallocation;connectionID:" + data["connectionID"] + ";deleteChannels:false";
+                            Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
                     }
                     break;
