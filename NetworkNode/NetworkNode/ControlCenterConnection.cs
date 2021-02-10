@@ -107,14 +107,16 @@ namespace NetworkNode {
                         int val;
                         routingTable.TryGetValue(key, out val);
                         Program.routingTable.Add(new Tuple<int, int>(key, val));
+                        GUIWindow.PrintLog("CC: Received MatrixConnection(" + key + ", " + val + ") from network's CC");
+                        GUIWindow.PrintLog("CC: Sent MatrixConnectionResponse() to network's CC");
                     }
 
                     TimeSpan currentTime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
                     TimeSpan diff = currentTime - timeSpan;
                     timeSpan = currentTime;
 
-                    if (diff.TotalMilliseconds > 500)
-                        GUIWindow.PrintLog("Received Connection Table");
+                    //if (diff.TotalMilliseconds > 500)
+                    
 
                     LinkedList<string[]> rows = new LinkedList<string[]>();
                     foreach (int key in routingTable.Keys) {

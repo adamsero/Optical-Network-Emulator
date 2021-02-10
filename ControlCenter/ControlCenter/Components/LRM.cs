@@ -63,7 +63,7 @@ namespace ControlCenter.Components {
                     break;
 
                 case "LinkConnectionInternalDeallocation":
-                    GUIWindow.PrintLog("Internal LRM: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from CC");
+                    
                     // ===================================================================
                     //Dealokacja lokalna
                     //Tutaj musi byc wyslane Local Topology do RC ale nie wiem z czym ??
@@ -80,15 +80,21 @@ namespace ControlCenter.Components {
                             }
                         }
 
+                        GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + connection.GetID() + ", " + data["connectionID"] + ") to Internal LRM");
+                        GUIWindow.PrintLog("Internal LRM: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from CC");
+
                         GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
                         GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM : DEALLOCATED");
                         GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
                         GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
+
+                        GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionInternalDeallocationResponse(" + data["connectionID"] + ") to CC : OK");
+                        GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocationResponse(" + data["connectionID"] + ") from Internal LRM : OK");
                     }
                     GUIWindow.UpdateChannelTable();
 
                     // ===================================================================
-                    GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionInternalDeallocationResponse(" + data["connectionID"] + ") to CC : OK");
+                    
                     message = "component:CC;name:LinkConnectionInternalDeallocationResponse;connectionID:" + data["connectionID"];
                     Program.cc.HandleRequest(Util.DecodeRequest(message));
                     break;
@@ -96,7 +102,7 @@ namespace ControlCenter.Components {
                 case "LinkConnectionRequest":
                     switch(data["type"]) {
                         case "internal":
-                            GUIWindow.PrintLog("Internal LRM: Received LinkConnectionRequest(" + data["channelRange"] + ") from CC");
+                            
                             string[] range = data["channelRange"].Split('-');
                             foreach(Connection connection in (RC.currentPath == null ? Program.cc.cachedPath.edges : RC.currentPath.edges)) {
                                 if (!ConfigLoader.myConnections.ContainsValue(connection))
@@ -106,13 +112,19 @@ namespace ControlCenter.Components {
                                     connection.slot[i] = RC.currentConnectionID;
                                 }
 
+                                GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + connection.GetID() +", " + data["channelRange"] + ") to internal LRM");
+                                GUIWindow.PrintLog("Internal LRM: Received LinkConnectionRequest(" + connection.GetID() + ", " + data["channelRange"] + ") from CC");
+
                                 GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC");
                                 GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM");
                                 GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
                                 GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
+
+                                GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionRequestResponse() to CC");
+                                GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from internal LRM");
                             }
                             GUIWindow.UpdateChannelTable();
-                            GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionRequestResponse() to CC");
+                            
                             Program.cc.HandleRequest(Util.DecodeRequest("name:LinkConnectionRequestResponse;type:internal;asType:" + data["asType"]));
                             break;
 

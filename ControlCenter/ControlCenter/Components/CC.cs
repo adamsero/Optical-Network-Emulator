@@ -38,7 +38,7 @@ namespace ControlCenter {
                             Call call2 = new Call(Convert.ToInt32(data["connID"]), true, (ConfigLoader.ccID == 1 ? 2 : 1), cachedPath.throughSN, connections2.Item1, connections2.Item2, cachedPath);
                             NCC.callRegister.Add(Convert.ToInt32(data["connID"]), call2);
 
-                            GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
+                            //GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
                             Program.rc.HandleRequest(Util.DecodeRequest("name:SendConnectionTables;connID:" + data["connID"] + ";path:" + data["path"]));
                             break;
                     }
@@ -59,7 +59,7 @@ namespace ControlCenter {
                     break;
 
                 case "RouteTableQueryResponse":
-                    GUIWindow.PrintLog("Received RouteTableQueryResponse(" + data["path"] + ") from RC");
+                    //GUIWindow.PrintLog("Received RouteTableQueryResponse(" + data["path"] + ") from RC");
                     if (data["path"].Equals("null")) {
                         GUIWindow.PrintLog("CC: Requested connection could not be established");
                         string message1 = "component:CC;name:ConnectionRequestResponse;succeeded:false";
@@ -74,7 +74,7 @@ namespace ControlCenter {
                     Call call = new Call(RC.currentConnectionID, Convert.ToBoolean(RC.cachedData["IDC"]), ConfigLoader.ccID, throughSN, connections.Item1, connections.Item2, RC.currentPath);
                     NCC.callRegister.Add(RC.currentConnectionID, call);
 
-                    GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to internal LRM");
+                    //GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + RC.cachedData["channelRange"] + ") to internal LRM");
                     string message2 = "name:LinkConnectionRequest;type:internal;channelRange:" + RC.cachedData["channelRange"] + ";asType:first";
                     Program.lrm.HandleRequest(Util.DecodeRequest(message2));
 
@@ -83,7 +83,7 @@ namespace ControlCenter {
                 case "LinkConnectionRequestResponse":
                     switch (data["type"]) {
                         case "internal":
-                            GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from internal LRM");
+                            //GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from internal LRM");
 
                             if (data["asType"].Equals("second")) {
                                 if (cachedPath.throughSN && ConfigLoader.ccID == 2) {
@@ -181,7 +181,7 @@ namespace ControlCenter {
                                     + ";routerIDs:" + data["routerIDs"] + ";endPoint1:" + data["endPoint1"] + ";" + "endPoint2:" + data["endPoint2"] + ";path:"
                                     + data["path"] + ";channelRange:" + data["channelRange"];
 
-                    GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
+                    //GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") to RC");
                     Program.rc.HandleRequest(Util.DecodeRequest("name:SendConnectionTables;connID:" + data["connID"] + ";path:" + data["path"]));
 
                     break;
@@ -193,9 +193,9 @@ namespace ControlCenter {
                     break;
 
                 case "SendConnectionTablesResponse":
-                    GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC");
+                    //GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC");
                     try {
-                        GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + cachedPath.channelRange + ") to internal LRM");
+                        //GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + cachedPath.channelRange + ") to internal LRM");
                         string message22 = "name:LinkConnectionRequest;type:internal;channelRange:" + cachedPath.channelRange + ";asType:" + (ConfigLoader.ccID == 3 ? "SN" : "second");
                         Program.lrm.HandleRequest(Util.DecodeRequest(message22));
                     } catch(Exception e) {
@@ -206,27 +206,37 @@ namespace ControlCenter {
                     break;
 
                 case "ConnectionTeardown":
-                    Path path = NCC.callRegister[Int32.Parse(data["connectionID"])].GetPath();
-
-                    GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["connectionID"] +", " + path.ToString() + ", disconnect) to RC");
-                    GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) from CC");
-
-                    Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), false, true);
-                    //Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), true, true);
-
-                    GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC : OK");
-                    GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC : OK");
+                    
                     
                     if (ConfigLoader.ccID == 3) {
                         //CHILD
-                        GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from Parent CC");
-                        GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                        GUIWindow.PrintLog("CC: Received ConnectionRequest(" + data["connectionID"] + ") from Parent CC");
+                        Path path = NCC.callRegister[Int32.Parse(data["connectionID"])].GetPath();
+
+                        //GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) to RC");
+                        //GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) from CC");
+
+                        Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), false, true);
+                        //Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), true, true);
+
+                        //GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC : OK");
+                        //GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC : OK");
+                        //GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                         string message1 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                         Program.lrm.HandleRequest(Util.DecodeRequest(message1));
                     }
                     else {
-                        GUIWindow.PrintLog("CC: Received ConnectionTeardown(" + data["connectionID"] + ") from NCC"); // InterDomainConnection: " + data["IDC"]
+                        GUIWindow.PrintLog("CC: Received ConnectionRequest(" + data["connectionID"] + ") from NCC"); // InterDomainConnection: " + data["IDC"]
+                        Path path = NCC.callRegister[Int32.Parse(data["connectionID"])].GetPath();
 
+                        //GUIWindow.PrintLog("CC: Sent SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) to RC");
+                        //GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["connectionID"] + ", " + path.ToString() + ", disconnect) from CC");
+
+                        Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), false, true);
+                        //Program.rc.UpdateRoutingTables(path, Int32.Parse(data["connectionID"]), true, true);
+
+                        //GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC : OK");
+                        //GUIWindow.PrintLog("CC: Received SendConnectionTablesResponse() from RC : OK");
                         var element = NCC.callRegister[Int32.Parse(data["connectionID"])];
                         bool interDomainConnectionFlag = element.GetInterDomainConnectionFlag();
                         int asID = element.GetStartAsID();
@@ -237,7 +247,7 @@ namespace ControlCenter {
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
                         else if (!interDomainConnectionFlag) {
-                            GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                            //GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                             string message3 = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                             Program.lrm.HandleRequest(Util.DecodeRequest(message3));
                         }
@@ -251,28 +261,28 @@ namespace ControlCenter {
 
                 case "LinkConnectionExternalDeallocationResponse":
                     GUIWindow.PrintLog("CC: Received LinkConnectionExternalDeallocation(" + data["connectionID"] + ") from External LRM : OK");
-                    GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
+                    //GUIWindow.PrintLog("CC: Sent LinkConnectionInternalDeallocation(" + data["connectionID"] + ") to Internal LRM");
                     string message = "component:LRM;name:LinkConnectionInternalDeallocation;connectionID:" + data["connectionID"];
                     Program.lrm.HandleRequest(Util.DecodeRequest(message));
                     break;
 
                 case "LinkConnectionInternalDeallocationResponse":
-                    GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocation(" + data["connectionID"] + ") from Internal LRM : OK");
+                    //GUIWindow.PrintLog("CC: Received LinkConnectionInternalDeallocationResponse(" + data["connectionID"] + ") from Internal LRM : OK");
 
                     if (NCC.callRegister[Int32.Parse(data["connectionID"])].GetThroughSubnetwork() && ConfigLoader.ccID == 2) {
                         // PARENT
-                        GUIWindow.PrintLog("CC: Sent ConnectionTeardown(" + data["connectionID"] + ") to Child CC");
+                        GUIWindow.PrintLog("CC: Sent ConnectionRequest(" + data["connectionID"] + ") to Child CC");
                         message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
                         Program.parentConnection.SendMessage(message);
                     }
                     else if (ConfigLoader.ccID == 3) {
                         // CHILD
-                        GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to Parent CC : OK");
+                        GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(" + data["connectionID"] + ") to Parent CC : OK");
                         message = "component:CC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
                         Program.childConnection.SendMessage(message);
                     }
                     else {
-                        GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");
+                        GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(" + data["connectionID"] + ") to NCC : OK");
                         message = "component:NCC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
                         Program.ncc.HandleRequest(Util.DecodeRequest(message), null);
                     }
@@ -280,8 +290,8 @@ namespace ControlCenter {
 
                 case "ConnectionTeardownResponse":
                     //Odpowiedz od CHILD
-                    GUIWindow.PrintLog("CC: Received ConnectionTeardownResponse(" + data["connectionID"] + ") from Child CC : OK");
-                    GUIWindow.PrintLog("CC: Sent ConnectionTeardownResponse(" + data["connectionID"] + ") to NCC : OK");
+                    GUIWindow.PrintLog("CC: Received ConnectionRequestResponse(" + data["connectionID"] + ") from Child CC : OK");
+                    GUIWindow.PrintLog("CC: Sent ConnectionRequestResponse(" + data["connectionID"] + ") to NCC : OK");
                     message = "component:NCC;name:ConnectionTeardownResponse;connectionID:" + data["connectionID"];
                     Program.ncc.HandleRequest(Util.DecodeRequest(message), null);
                     break;

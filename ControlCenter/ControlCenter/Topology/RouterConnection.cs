@@ -57,17 +57,16 @@ namespace ControlCenter {
                         }
 
                         if(GUIWindow.ShowKeepAlive())
-                            GUIWindow.PrintLog("RC: KEEP-ALIVE received from Router #" + id);
+                            GUIWindow.PrintLog("CC: KEEP-ALIVE received from Router #" + id);
                     } catch(IOException) {
-                        //GUIWindow.PrintLog("Failed to receive KEEP-ALIVE from Router #" + id);
-                        GUIWindow.PrintLog("RC: Router #" + id + " has stopped working.");
+                        PrintLRMLogs();
                         GUIWindow.PrintLog("CC: Router #" + id + " has stopped working.");
                         router.working = false;
                         working = false;
                         server.RemoveRouterConnection(this);
                         //redirect route
                         foreach(int connectionID in currentConnections) {
-                            GUIWindow.PrintLog("CC: Sent FastReroute(" + connectionID + ") to RC");
+                            GUIWindow.PrintLog("CC: Sent RouteTableQuery(" + connectionID + ") to RC");
                             Program.rc.FastReroute(NCC.callRegister[connectionID], connectionID);
                         }
 
@@ -76,6 +75,18 @@ namespace ControlCenter {
                 }
 
             }).Start();
+        }
+
+        private void PrintLRMLogs() {
+            foreach(Connection connection in ConfigLoader.myConnections.Values) {
+                if(connection.endPoints.Item1.GetRouterID() == id || connection.endPoints.Item2.GetRouterID() == id) {
+                    GUIWindow.PrintLog("Internal LRM: LinkConnection #" + connection.GetID() + " has stopped working");
+                    GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ", DISABLED) to RC");
+                    GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ", DISABLED) from Internal LRM");
+                    GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM");
+                    GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC");
+                }
+            }
         }
 
         public void SendRoutingTable(Dictionary<int, int> routingTable) {

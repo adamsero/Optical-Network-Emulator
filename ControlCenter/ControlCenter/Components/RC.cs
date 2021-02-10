@@ -17,11 +17,11 @@ namespace ControlCenter {
                 case "NetworkTopology":
                     switch(data["receiver"]) {
                         case "peer":
-                            GUIWindow.PrintLog("RC: Received TopologyQuery() from peer RC");
+                            GUIWindow.PrintLog("RC: Received NetworkTopology() from peer RC");
                             
                             if(data["scenario"].Equals("1")) {
                                 //scenariusz #1
-                                GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
+                                GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
                                 string message2 = "component:RC;name:NetworkTopology;receiver:child;scenario:" + data["scenario"];
                                 Program.parentConnection.SendMessage(message2);
                             } else if (data["scenario"].Equals("2")) {
@@ -46,7 +46,7 @@ namespace ControlCenter {
                                 channelList2 = channelList2.Remove(channelList2.Length - 1, 1);
                                 //GUIWindow.PrintLog("Channel List: " + channelList2);
 
-                                GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
+                                GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList2 + hostList + linksList2 + ") to peer RC");
                                 string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList2 + ";linksList:" + linksList2 + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList2 + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             }
@@ -54,7 +54,7 @@ namespace ControlCenter {
 
                         case "child":
                             //scenariusz #1, 2 lub 3
-                            GUIWindow.PrintLog("RC: Received TopologyQuery() from parent RC");
+                            GUIWindow.PrintLog("RC: Received NetworkTopology() from parent RC");
                             string routersList = "Routers = ";
                             foreach (Router router in ConfigLoader.myRouters)
                                 routersList += (router.working ? "" : "!") + router.GetRouterID() + ", ";
@@ -70,7 +70,7 @@ namespace ControlCenter {
                             channelList = channelList.Remove(channelList.Length - 1, 1);
                             //GUIWindow.PrintLog("Channel List: " + channelList);
 
-                            GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList + linksList + ") to parent RC");
+                            GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + linksList + ") to parent RC");
                             string message1 = "component:RC;name:NetworkTopologyResponse;receiver:parent;routersList:" + routersList + ";linksList:" + linksList + ";scenario:" + data["scenario"] + ";channels:" + channelList;
                             Program.childConnection.SendMessage(message1);
                             break;
@@ -81,7 +81,7 @@ namespace ControlCenter {
                 case "NetworkTopologyResponse":
                     switch (data["receiver"]) {
                         case "parent":
-                            GUIWindow.PrintLog("RC: Received TopologyQueryResponse(" + data["routersList"] + data["linksList"] + ") from child RC");
+                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["linksList"] + ") from child RC");
                             if (data["scenario"].Equals("1")) {
                                 //scenariusz #1
                                 string hostList = " Hosts = ";
@@ -103,12 +103,12 @@ namespace ControlCenter {
                                 linksList = linksList.Remove(linksList.Length - 2, 2);
                                 channelList = channelList.Remove(channelList.Length - 1, 1);
 
-                                GUIWindow.PrintLog("RC: Sent TopologyQueryResponse(" + routersList + hostList + linksList + ") to peer RC");
+                                GUIWindow.PrintLog("RC: Sent NetworkTopologyResponse(" + routersList + hostList + linksList + ") to peer RC");
                                 string message = "component:RC;name:NetworkTopologyResponse;receiver:peer;routersList:" + routersList + ";linksList:" + linksList + ";hostList:" + hostList + ";scenario:" + data["scenario"] + ";channels:" + channelList + ";connID:" + currentConnectionID;
                                 Program.peerConnection.SendMessage(message);
                             } else if(data["scenario"].Equals("2")) {
                                 //scenariusz #2
-                                GUIWindow.PrintLog("RC: Sent TopologyQuery() to peer RC");
+                                GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
                                 CacheChannels(data["channels"]);
                                 FlagRouters(data["routersList"]);
                                 string message = "component:RC;name:NetworkTopology;receiver:peer;routersList:" + data["routersList"] + ";linksList:" + data["linksList"] + ";scenario:" + data["scenario"];
@@ -124,7 +124,7 @@ namespace ControlCenter {
                             break;
 
                         case "peer":
-                            GUIWindow.PrintLog("RC: Received TopologyQueryResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
+                            GUIWindow.PrintLog("RC: Received NetworkTopologyResponse(" + data["routersList"] + data["hostList"] + data["linksList"] + ") from peer RC");
                             if (data["scenario"].Equals("1")) {
                                 //koniec scenariusza #1
                                 cachedData.Add("peerConnID", data["connID"]);
@@ -157,7 +157,7 @@ namespace ControlCenter {
                         if(Convert.ToBoolean(data["IDC"])) {
                             //scenariusz #1
                             string message = "component:RC;name:NetworkTopology;receiver:peer;scenario:1";
-                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to peer RC");
+                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to peer RC");
                             Program.peerConnection.SendMessage(message);
                         } else {
                             //scenariusz #4
@@ -168,26 +168,25 @@ namespace ControlCenter {
                         if (Convert.ToBoolean(data["IDC"])) {
                             //scenariusz #2
                             string message = "component:RC;name:NetworkTopology;receiver:child;scenario:2";
-                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
+                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
                             Program.parentConnection.SendMessage(message);
                         }
                         else {
                             //scenariusz #3
                             string message = "component:RC;name:NetworkTopology;receiver:child;scenario:3";
-                            GUIWindow.PrintLog("RC: Sent TopologyQuery() to child RC");
+                            GUIWindow.PrintLog("RC: Sent NetworkTopology() to child RC");
                             Program.parentConnection.SendMessage(message);
                         }
                     }
                     break;
 
                 case "SendConnectionTables":
-                    GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") from CC");
-                    GUIWindow.PrintLog("RC: Sending connection tables to Routers");
+                    //GUIWindow.PrintLog("RC: Received SendConnectionTables(" + data["path"] + ", " + data["connID"] + ") from CC");
                     currentConnectionID = Convert.ToInt32(data["connID"]);
                     UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, false, false);
                     UpdateRoutingTables(Program.cc.cachedPath, currentConnectionID, true, false);
 
-                    GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC");
+                    //GUIWindow.PrintLog("RC: Sent SendConnectionTablesResponse() to CC");
                     Program.cc.HandleRequest(Util.DecodeRequest("component:CC;name:SendConnectionTablesResponse"));
                     break;
             }
@@ -302,19 +301,21 @@ namespace ControlCenter {
                 nextConnectionID = Math.Max(nextConnectionID, Convert.ToInt32(cachedData["peerConnID"]) + 1);
             }
             currentConnectionID = nextConnectionID;
+            string pathString = (chosenPath == null ? "null" : chosenPath.ToString());
 
-            GUIWindow.PrintLog("RC: Sending connection tables to Routers");
+            GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(" + pathString + ") to CC");
+            GUIWindow.PrintLog("CC: Received RouteTableQueryResponse(" + pathString + ") from RC");
+
             UpdateRoutingTables(chosenPath, currentConnectionID, false, false);
             UpdateRoutingTables(chosenPath, currentConnectionID, true, false);
-
-            string pathString = (chosenPath == null ? "null" : chosenPath.ToString());
+            
             string message = "component:CC;name:RouteTableQueryResponse;path:" + pathString;
-            GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(" + pathString + ") to CC");
+            
             Program.cc.HandleRequest(Util.DecodeRequest(message));
         }
 
         public bool FastReroute(Call call, int connectionID) {
-            GUIWindow.PrintLog("RC: Received FastReroute(" + connectionID + ") from CC");
+            GUIWindow.PrintLog("RC: Received RouteTableQuery(" + connectionID + ") from CC");
 
             Path oldPath = call.GetPath();
             List<Path> paths = null;
@@ -332,14 +333,27 @@ namespace ControlCenter {
 
             Path newPath = paths[0];
             NCC.callRegister[connectionID].path = newPath;
+
+            string oldLCs = "";
+            foreach (Connection connection in oldPath.edges) {
+                if (ConfigLoader.myConnections.Values.Contains(connection))
+                    oldLCs += connection.GetID() + ", ";
+            }
+            oldLCs = oldLCs.Remove(oldLCs.Length - 2, 2);
+
+            string newLCs = "";
+            foreach (Connection connection in newPath.edges) {
+                if (ConfigLoader.myConnections.Values.Contains(connection))
+                    newLCs += connection.GetID() + ", ";
+            }
+            newLCs = newLCs.Remove(newLCs.Length - 2, 2);
+
+            GUIWindow.PrintLog("RC: Sent RouteTableQueryResponse(" + oldLCs + ";" + newLCs + ") to CC"); //tutaj dodać do argumentów id LC tylko z tej podsieci
+            GUIWindow.PrintLog("CC: Received RouteTableQueryResponse(" + oldLCs + ";" + newLCs + ") from RC"); //tu też
+
             UpdateRoutingTables(oldPath, call.GetConnectionID(), false, true);
             UpdateRoutingTables(newPath, call.GetConnectionID(), false, false);
             UpdateRoutingTables(newPath, call.GetConnectionID(), true, false);
-
-            GUIWindow.PrintLog("RC: Sent FastRerouteResponse() to CC");
-            GUIWindow.PrintLog("CC: Received FastRerouteResponse() from RC");
-            GUIWindow.PrintLog("CC: Sent ChannelReallocation() to internal LRM");
-            GUIWindow.PrintLog("Internal LRM: Received ChannelReallocation() from CC");
 
             foreach(Connection connection in oldPath.edges) {
                 if (!ConfigLoader.myConnections.Values.Contains(connection))
@@ -351,10 +365,16 @@ namespace ControlCenter {
                     }
                 }
 
+                GUIWindow.PrintLog("CC: Sent LinkConnectionDeallocation(" + connection.GetID() + ") to internal LRM");
+                GUIWindow.PrintLog("Internal LRM: Received LinkConnectionDeallocation(" + connection.GetID() + ") from CC");
+
                 GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC : DEALLOCATED");
                 GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM : DEALLOCATED");
                 GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
                 GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
+
+                GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionDeallocationResponse() to CC");
+                GUIWindow.PrintLog("CC: Received LinkConnectionDeallocationResponse() from Internal LRM");
             }
 
             string[] range = oldPath.channelRange.Split('-');
@@ -366,15 +386,21 @@ namespace ControlCenter {
                     connection.slot[i] = RC.currentConnectionID;
                 }
 
+                GUIWindow.PrintLog("CC: Sent LinkConnectionRequest(" + connection.GetID() + ", " + oldPath.channelRange + ") to internal LRM");
+                GUIWindow.PrintLog("Internal LRM: Received LinkConnectionRequest(" + connection.GetID() + ", " + oldPath.channelRange + ") from CC");
+
                 GUIWindow.PrintLog("Internal LRM: Sent LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") to RC");
                 GUIWindow.PrintLog("RC: Received LocalTopology(" + connection.GetID() + ": " + String.Join("", connection.slot) + ") from Internal LRM");
                 GUIWindow.PrintLog("RC: Sent LocalTopologyResponse() to Internal LRM : OK");
                 GUIWindow.PrintLog("Internal LRM: Received LocalTopologyResponse() from RC : OK");
+
+                GUIWindow.PrintLog("Internal LRM: Sent LinkConnectionRequestResponse() to CC");
+                GUIWindow.PrintLog("CC: Received LinkConnectionRequestResponse() from Internal LRM");
             }
             GUIWindow.UpdateChannelTable();
 
-            GUIWindow.PrintLog("Internal LRM: Sent ChannelReallocationResponse() to CC");
-            GUIWindow.PrintLog("CC: Received ChannelReallocationResponse() from Internal LRM");
+            //GUIWindow.PrintLog("Internal LRM: Sent ChannelReallocationResponse() to CC");
+            //GUIWindow.PrintLog("CC: Received ChannelReallocationResponse() from Internal LRM");
 
             return true;
         }
@@ -422,9 +448,10 @@ namespace ControlCenter {
                     Dictionary<int, int> routingTable = new Dictionary<int, int>();
                     routingTable.Add(id, port);
                     routerConnection.SendRoutingTable(routingTable);
-                    if(log) {
-                        GUIWindow.PrintLog("RC: Sent connection table to Router #" + router.GetRouterID());
-                    }
+                    //if(log) {
+                        GUIWindow.PrintLog("CC: Sent MatrixConnection(" + id + ", " + port + ") to Router #" + router.GetRouterID() + "'s CC");
+                        GUIWindow.PrintLog("CC: Received MatrixConnectionResponse() from Router #" + router.GetRouterID() + "'s CC");
+                    //}
                     break;
                 }
             }

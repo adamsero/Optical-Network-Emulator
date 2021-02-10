@@ -128,13 +128,13 @@ namespace ControlCenter {
                     case "CallTeardownCPCC":
                         GUIWindow.PrintLog("NCC: Received CallTeardownCPCC(" + data["connectionID"] + ") from CPCC");
 
-                        GUIWindow.PrintLog("NCC: Sent ConnectionTeardown(" + data["connectionID"] + ") to CC");
+                        GUIWindow.PrintLog("NCC: Sent ConnectionRequest(" + data["connectionID"] + ") to CC");
                         message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
                         Program.cc.HandleRequest(Util.DecodeRequest(message));
                         break;
 
                     case "ConnectionTeardownResponse":
-                        GUIWindow.PrintLog("NCC: Received ConnectionTeardownResponse(" + data["connectionID"] + ") from CC : OK");
+                        GUIWindow.PrintLog("NCC: Received ConnectionRequestResponse(" + data["connectionID"] + ") from CC : OK");
                         
                         if (callRegister[Int32.Parse(data["connectionID"])].GetStartAsID() == ConfigLoader.ccID) {
                             // Pierwszy AS
@@ -178,7 +178,7 @@ namespace ControlCenter {
                         }
                         else {
                             //polaczenie zewnatrzdomenowe
-                            GUIWindow.PrintLog("NCC: Sent ConnectionTeardown(" + data["connectionID"] + ") to CC");
+                            GUIWindow.PrintLog("NCC: Sent ConnectionRequest(" + data["connectionID"] + ") to CC");
                             message = "component:CC;name:ConnectionTeardown;connectionID:" + data["connectionID"];
                             Program.cc.HandleRequest(Util.DecodeRequest(message));
                         }
