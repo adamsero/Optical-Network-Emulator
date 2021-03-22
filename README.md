@@ -1,2 +1,2 @@
-# TSST-Etap2-Rework
-Rework CC na 2 procesy
+# Optical Network Emulator
+This emulator showcases an Elastic Optical Network, according to G.8080 architecture.
